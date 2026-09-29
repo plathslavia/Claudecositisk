@@ -6,8 +6,8 @@ Uso (desde la raíz del repositorio):
     python3 entrega/generar_guia.py
 
 Toma la plantilla de entrega/plantilla/Guia_7_original.docx y las capturas de
-CumbreCafe/capturas/*.png (generadas con `./gradlew capturas` o tomadas del emulador),
-y escribe entrega/Guia_7_Master_Detail_Cumbre_Cafe.docx.
+VitalisEPS/capturas/*.png (generadas con `./gradlew capturas` o tomadas del emulador),
+y escribe entrega/Guia_7_Master_Detail_Vitalis_EPS.docx.
 Si falta una captura, deja en su lugar un aviso para pegarla a mano.
 """
 
@@ -22,8 +22,8 @@ from docx.text.paragraph import Paragraph
 
 RAIZ = Path(__file__).resolve().parent.parent
 PLANTILLA = RAIZ / "entrega" / "plantilla" / "Guia_7_original.docx"
-CAPTURAS = RAIZ / "CumbreCafe" / "capturas"
-SALIDA = RAIZ / "entrega" / "Guia_7_Master_Detail_Cumbre_Cafe.docx"
+CAPTURAS = RAIZ / "VitalisEPS" / "capturas"
+SALIDA = RAIZ / "entrega" / "Guia_7_Master_Detail_Vitalis_EPS.docx"
 
 ASIGNATURA = "DESARROLLO DE APLICACIONES MÓVILES"
 INTEGRANTES = ["Andrés García", "Camilo Casallas", "Cristóbal Moncada"]
@@ -207,11 +207,11 @@ def llenar(doc):
     evidencias = buscar(doc, "Se deben debe incluir como evidencias")
     insertar_despues(evidencias, [
         parrafo([("Solución desarrollada: ", NEG),
-                 ("aplicación “Cumbre Café Co.”, de una empresa ficticia que tuesta y vende café de especialidad colombiano. "
+                 ("aplicación “Vitalis EPS”, para que los afiliados de una EPS ficticia gestionen sus citas médicas. "
                   "Se construyó en Android Studio con Kotlin Multiplatform y Compose Multiplatform: la interfaz se escribe una sola vez "
-                  "y se ejecuta en Android y en escritorio (Cross Platform). Tiene tres vistas: Principal, con la información de la empresa; "
-                  "Maestro, con el catálogo de cafés; y Detalle, con la ficha de cada café. El código fuente está en la carpeta CumbreCafe "
-                  "del repositorio.", {})],
+                  "y se ejecuta en Android y en escritorio (Cross Platform). Tiene tres vistas: Principal, con la información de la EPS "
+                  "y la próxima cita; Maestro, con la lista de citas del afiliado; y Detalle, con toda la información de la cita elegida, "
+                  "donde se puede confirmar o cancelar. El código fuente está en la carpeta VitalisEPS del repositorio.", {})],
                 estilo=None, izquierda=0, despues=120, antes=160),
     ])
 
@@ -220,24 +220,24 @@ def llenar(doc):
     quitar_vacios_siguientes(principal)
     insertar_despues(principal, [
         fila_imagenes(doc, ["01_principal.png", "02_principal_empresa.png", "03_principal_contacto.png"], 1.55),
-        pie("Figuras 1 a 3. Vista Principal: portada con el acceso al catálogo, información de la empresa "
-            "(quiénes somos, cifras, misión y visión) y servicios con datos de contacto."),
+        pie("Figuras 1 a 3. Vista Principal: portada con la próxima cita y el acceso a Mis citas, información de la EPS "
+            "(cifras, quiénes somos, misión y visión), servicios y canales de atención."),
     ])
 
     maestro = buscar(doc, "Pantallazo Vista Maestro")
     quitar_vacios_siguientes(maestro)
     insertar_despues(maestro, [
         fila_imagenes(doc, ["04_maestro.png"], 2.3),
-        pie("Figura 4. Vista Maestro: catálogo de ocho cafés con búsqueda por texto y filtros por proceso. "
-            "Al tocar un café se abre su detalle."),
+        pie("Figura 4. Vista Maestro (Mis citas): resumen por estado, búsqueda, filtros (Próximas, Por confirmar, "
+            "Historial, Todas) y la lista de citas agrupada por mes. Al tocar una cita se abre su detalle."),
     ])
 
     detalle = buscar(doc, "Pantallazo Vista Detalle")
     quitar_vacios_siguientes(detalle)
     insertar_despues(detalle, [
         fila_imagenes(doc, ["05_detalle.png", "06_detalle_info.png"], 2.3),
-        pie("Figuras 5 y 6. Vista Detalle del café Planadas Geisha: origen, ficha técnica, notas de cata, "
-            "nivel de tueste, métodos de preparación y barra de compra."),
+        pie("Figuras 5 y 6. Vista Detalle de una cita de Cardiología: profesional, fecha, hora y duración, lugar, motivo, "
+            "lista de preparación, autorización y botones para confirmar o cancelar la asistencia."),
         fila_imagenes(doc, ["07_tablet_maestro_detalle.png"], 5.6),
         pie("Figura 7. En pantallas anchas (tablet o escritorio) el Maestro y el Detalle se muestran lado a lado, "
             "como la MasterDetailPage/FlyoutPage de Xamarin."),
@@ -245,9 +245,10 @@ def llenar(doc):
 
     presentar = buscar(doc, "Presentar la aplicación funcionando al docente")
     insertar_despues(presentar, [
-        parrafo("Para la presentación se abre la carpeta CumbreCafe en Android Studio, se espera la sincronización de Gradle, "
+        parrafo("Para la presentación se abre la carpeta VitalisEPS en Android Studio, se espera la sincronización de Gradle, "
                 "se elige la configuración composeApp con un emulador o un celular conectado y se pulsa Run. Recorrido de la "
-                "demostración: Principal → Explorar catálogo → buscar o filtrar → tocar un café → Detalle → botón Atrás del sistema.",
+                "demostración: Principal → Ver mis citas → filtrar o buscar → tocar una cita → Detalle → Confirmar asistencia → "
+                "botón Atrás del sistema (la cita aparece ahora como Confirmada en la lista).",
                 izquierda=720, despues=120, antes=60),
     ])
 
@@ -302,17 +303,20 @@ def llenar(doc):
 
     facturacion = buscar(doc, "En una aplicación maestro detalle con gestión de base de datos")
     insertar_despues(facturacion, [
-        respuesta("el mínimo estricto son dos tablas, porque la relación maestro-detalle es de uno a muchos: FACTURA (el maestro) "
-                  "y DETALLE_FACTURA (el detalle). Una factura tiene muchas líneas de detalle y cada línea pertenece a una sola "
-                  "factura. Para que la base de datos quede normalizada, sin repetir datos del cliente ni de los productos en cada "
-                  "factura, lo recomendable son cuatro tablas:", izquierda=0),
-        vineta("CLIENTE ", "(id_cliente PK, documento, nombre, dirección, teléfono, correo).", izquierda=454),
-        vineta("PRODUCTO ", "(id_producto PK, nombre, descripción, precio_unitario, existencias).", izquierda=454),
-        vineta("FACTURA — maestro ", "(id_factura PK, número, fecha, id_cliente FK, subtotal, IVA, total).", izquierda=454),
-        vineta("DETALLE_FACTURA — detalle ", "(id_detalle PK, id_factura FK, id_producto FK, cantidad, precio_unitario, "
-               "subtotal).", izquierda=454),
-        parrafo("Relaciones: CLIENTE 1 — N FACTURA, FACTURA 1 — N DETALLE_FACTURA y PRODUCTO 1 — N DETALLE_FACTURA. "
-                "En la aplicación, la vista maestro lista las facturas y la vista detalle muestra las líneas de la factura elegida.",
+        respuesta("se necesitan como mínimo cuatro tablas. El corazón del proceso es la relación maestro-detalle entre "
+                  "Facturas (el maestro, el encabezado) y Movimientos (el detalle, las líneas de la factura): una factura tiene "
+                  "muchos movimientos y cada movimiento pertenece a una sola factura. Además se necesitan Clientes y Productos para "
+                  "no repetir en cada factura los datos del cliente ni los de cada producto:", izquierda=0),
+        vineta("Clientes ", "(id_cliente INTEGER PK autoincremental, nombre TEXT NOT NULL, direccion TEXT, telefono TEXT).",
+               izquierda=454),
+        vineta("Productos ", "(id_producto INTEGER PK, nombre TEXT, precio_unitario REAL, stock INTEGER).", izquierda=454),
+        vineta("Facturas — maestro ", "(id_factura INTEGER PK, id_cliente INTEGER FK, fecha TEXT, total REAL).", izquierda=454),
+        vineta("Movimientos — detalle ", "(id_movimiento INTEGER PK, id_factura INTEGER FK, id_producto INTEGER FK, "
+               "cantidad INTEGER, precio_unitario_facturado REAL, subtotal REAL).", izquierda=454),
+        parrafo("Hay tres llaves foráneas: Facturas.id_cliente → Clientes, Movimientos.id_factura → Facturas y "
+                "Movimientos.id_producto → Productos. En Movimientos se guarda el precio_unitario_facturado para que la factura "
+                "conserve el precio del día de la venta aunque después cambie el precio en Productos. En una app, la vista Maestro "
+                "listaría las facturas y la vista Detalle mostraría los movimientos de la factura elegida.",
                 izquierda=0, despues=120),
     ])
 
@@ -322,7 +326,7 @@ def llenar(doc):
         parrafo("En la exposición se presentan tres puntos: (1) las tres aplicaciones investigadas usan el patrón maestro-detalle "
                 "para ir de una lista general a la información de un elemento y, en pantallas grandes, muestran las dos vistas al "
                 "mismo tiempo; (2) el modelo de facturación con sus cuatro tablas y las relaciones uno a muchos entre ellas; y (3) "
-                "cómo se aplica el patrón en nuestra app Cumbre Café: el catálogo es el maestro y cada café es el detalle.",
+                "cómo se aplica el patrón en nuestra app Vitalis EPS: la lista de citas es el maestro y cada cita es el detalle.",
                 izquierda=0, despues=120, antes=60),
     ])
 
@@ -330,18 +334,21 @@ def llenar(doc):
     procedimiento = buscar(doc, "Procedimiento y Metodología de la práctica")
     diagrama = procedimiento.getparent().getparent().getnext().find(f"{qn('w:tc')}/{qn('w:p')}")
     pasos = [
-        ("Análisis. ", "Se definió una empresa ficticia, Cumbre Café Co., tostadora de café de especialidad en Bogotá, y el "
-         "contenido de cada vista: Principal (información de la empresa), Maestro (catálogo) y Detalle (ficha del café)."),
+        ("Análisis. ", "Se definió una EPS ficticia, Vitalis EPS, y el contenido de cada vista: Principal (información de la "
+         "EPS y próxima cita), Maestro (lista de citas del afiliado) y Detalle (información completa de una cita)."),
         ("Creación del proyecto. ", "En Android Studio se creó un proyecto Kotlin Multiplatform con Compose Multiplatform y dos "
          "destinos, Android y escritorio (JVM). La interfaz vive en commonMain y se comparte entre plataformas."),
-        ("Modelo de datos (data/Datos.kt). ", "El objeto Empresa guarda misión, visión, servicios y contacto; la clase de datos "
-         "Cafe describe cada producto y el objeto Catalogo contiene ocho cafés de distintas regiones de Colombia."),
-        ("Vista Principal (ui/PantallaPrincipal.kt). ", "Portada con logo, nombre y eslogan, secciones Quiénes somos, cifras, "
-         "misión y visión, servicios, contacto e integrantes, y el botón Explorar catálogo."),
-        ("Vista Maestro (ui/PantallaMaestro.kt). ", "Lista con LazyColumn, búsqueda por texto y filtros por proceso (Lavado, "
-         "Honey, Natural). Al tocar un café se navega a su detalle."),
-        ("Vista Detalle (ui/PantallaDetalle.kt). ", "Encabezado con el arte del origen, ficha técnica (altitud, variedad, proceso "
-         "y productor), notas de cata, nivel de tueste, historia, métodos de preparación y barra de compra con cantidad."),
+        ("Modelo de datos (data/Datos.kt). ", "El objeto Empresa guarda misión, visión, servicios y canales de atención; la "
+         "clase de datos Cita describe cada cita (especialidad, profesional, fecha, hora, sede, estado, preparación y "
+         "autorización) y el objeto Agenda contiene nueve citas de distintas especialidades."),
+        ("Vista Principal (ui/PantallaPrincipal.kt). ", "Portada con logo, eslogan, una línea de pulso animada y la tarjeta de "
+         "la próxima cita con el botón Ver mis citas; luego cifras, quiénes somos, misión y visión, servicios, canales de "
+         "atención e integrantes."),
+        ("Vista Maestro (ui/PantallaMaestro.kt). ", "Resumen de citas por estado, búsqueda por texto, filtros (Próximas, Por "
+         "confirmar, Historial, Todas) y lista con LazyColumn agrupada por mes. Al tocar una cita se navega a su detalle."),
+        ("Vista Detalle (ui/PantallaDetalle.kt). ", "Encabezado con el color de la especialidad, profesional, tarjeta con fecha, "
+         "hora y duración, lugar o videollamada, motivo, lista de preparación que se puede marcar, datos de autorización y una "
+         "barra de acciones que cambia según el estado: confirmar o cancelar la cita. El cambio se refleja también en la lista."),
         ("Navegación (App.kt). ", "Pila de navegación Principal → Maestro → Detalle con transiciones animadas; el botón Atrás del "
          "sistema regresa a la vista anterior. Con 840 dp de ancho o más (tablet o escritorio) el Maestro y el Detalle se "
          "muestran lado a lado."),
@@ -349,9 +356,9 @@ def llenar(doc):
          "forma nativa en Android, igual que se haría con el DependencyService de Xamarin."),
         ("Pruebas. ", "Se ejecutó la aplicación y se revisaron las tres vistas, la búsqueda, los filtros, la navegación de ida y "
          "vuelta y el diseño de dos paneles; de ahí salen las capturas de la sección de resultados."),
-        ("Control de versiones. ", "El código fuente se versionó con Git en GitHub (carpeta CumbreCafe del repositorio)."),
+        ("Control de versiones. ", "El código fuente se versionó con Git en GitHub (carpeta VitalisEPS del repositorio)."),
     ]
-    nuevos = [parrafo([("Desarrollo de la práctica — aplicación Cumbre Café Co.", NEG)], estilo=None, alinear="left",
+    nuevos = [parrafo([("Desarrollo de la práctica — aplicación Vitalis EPS", NEG)], estilo=None, alinear="left",
                       despues=80, antes=160)]
     for i, (titulo_paso, t) in enumerate(pasos, start=1):
         nuevos.append(parrafo([(f"{i}. ", NEG), (titulo_paso, NEG), (t, {})], estilo=None, izquierda=340, sangria=340,
@@ -361,14 +368,17 @@ def llenar(doc):
     # Criterios de entrega: guion en inglés.
     entrega = buscar(doc, "Exposición en el idioma inglés de la actividad realizada")
     guion = [
-        "Hello, we are Andrés García, Camilo Casallas and Cristóbal Moncada. Today we present Cumbre Café, a cross-platform "
-        "mobile app built in Android Studio with Kotlin and Compose Multiplatform.",
-        "The app follows the master-detail pattern. The main screen introduces the company: who we are, our mission and vision, "
-        "our services and our contact information. When the user taps “Explorar catálogo”, the app opens the master view: a list "
-        "of eight Colombian specialty coffees that can be searched by name, region or tasting note, and filtered by process.",
-        "Selecting a coffee opens the detail view. It shows the origin, altitude, variety, tasting notes, roast level and price, "
-        "and it lets the user choose a quantity and add the coffee to the order. The system back button always returns to the "
-        "previous screen. On wide screens, such as tablets or desktop, the list and the detail are shown side by side.",
+        "Hello, we are Andrés García, Camilo Casallas and Cristóbal Moncada. Today we present Vitalis EPS, a cross-platform "
+        "mobile app built in Android Studio with Kotlin and Compose Multiplatform, where the members of a health insurance "
+        "company manage their medical appointments.",
+        "The app follows the master-detail pattern. The main screen introduces the company: our numbers, who we are, our mission "
+        "and vision, our services and our support channels. It also shows the next appointment. When the user taps “Ver mis "
+        "citas”, the app opens the master view: the list of appointments, grouped by month, that can be searched by doctor or "
+        "specialty and filtered by status.",
+        "Selecting an appointment opens the detail view. It shows the doctor, the date, time and duration, the place or video "
+        "call, the reason for the visit, a checklist to prepare for it and the authorization data. From there the user can "
+        "confirm or cancel the appointment, and the change also appears in the list. The system back button always returns to "
+        "the previous screen. On wide screens, such as tablets or desktop, the list and the detail are shown side by side.",
         "The user interface is written once and shared between Android and desktop. Platform-specific parts, like the back "
         "button, use Kotlin's expect/actual mechanism, which plays the same role as Xamarin's DependencyService. Thank you.",
     ]

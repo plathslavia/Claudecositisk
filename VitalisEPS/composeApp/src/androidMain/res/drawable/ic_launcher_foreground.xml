@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Logotipo: corazón con línea de pulso. Lienzo de 108dp; el contenido visible va en el círculo central de 72dp. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FF12D6B0"
+        android:pathData="M54,76 C42,67 33,59 33,48 C33,41.5 38,37 44,37 C48.5,37 52,39.5 54,43 C56,39.5 59.5,37 64,37 C70,37 75,41.5 75,48 C75,59 66,67 54,76 Z" />
+    <path
+        android:strokeColor="#FF0B1B3A"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M36,53 L45,53 L49,45 L55,61 L59,50 L62,53 L72,53" />
+</vector>

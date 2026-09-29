@@ -1,7 +1,0 @@
-<resources>
-    <style name="Theme.Cumbre" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">@color/crema</item>
-    </style>
-    <color name="crema">#FFF7F1E8</color>
-    <color name="caramelo">#FFC8894B</color>
-</resources>

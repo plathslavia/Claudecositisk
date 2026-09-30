@@ -39,6 +39,7 @@ object Empresa {
     const val NIT = "NIT 900.555.321-7 · Entidad ficticia con fines académicos"
 
     const val AFILIADO = "Camilo Casallas"
+    const val ID_AFILIADO = 1
     val equipo = listOf("Andrés García", "Camilo Casallas", "Cristóbal Moncada")
 }
 
@@ -106,7 +107,7 @@ data class Cita(
 object Agenda {
     val citas = listOf(
         Cita(
-            id = "c1", especialidad = Especialidad.MedicinaGeneral,
+            id = "1", especialidad = Especialidad.MedicinaGeneral,
             profesional = "Dra. Laura Méndez", registro = "RM 52.184",
             fecha = Fecha("Jue", 1, 10, 2026), hora = "7:30 a. m.", duracionMin = 20,
             modalidad = Modalidad.Presencial, sede = "Sede Chapinero", lugar = "Consultorio 204 · Cl. 63 # 13-22",
@@ -116,7 +117,7 @@ object Agenda {
             autorizacion = "AUT-2026-58213", cuotaModeradora = 5200,
         ),
         Cita(
-            id = "c2", especialidad = Especialidad.Odontologia,
+            id = "2", especialidad = Especialidad.Odontologia,
             profesional = "Dr. Santiago Rojas", registro = "RM 77.410",
             fecha = Fecha("Vie", 2, 10, 2026), hora = "10:00 a. m.", duracionMin = 40,
             modalidad = Modalidad.Presencial, sede = "Sede Usaquén", lugar = "Consultorio 12 · Cra. 7 # 119-14",
@@ -126,7 +127,7 @@ object Agenda {
             autorizacion = "AUT-2026-58877", cuotaModeradora = 5200,
         ),
         Cita(
-            id = "c3", especialidad = Especialidad.Psicologia,
+            id = "3", especialidad = Especialidad.Psicologia,
             profesional = "Dra. Mariana Ortiz", registro = "TP 118.502",
             fecha = Fecha("Lun", 5, 10, 2026), hora = "4:30 p. m.", duracionMin = 50,
             modalidad = Modalidad.Telemedicina, sede = "Videollamada", lugar = "El enlace se activa 10 minutos antes",
@@ -136,7 +137,7 @@ object Agenda {
             autorizacion = "AUT-2026-59002", cuotaModeradora = 5200,
         ),
         Cita(
-            id = "c4", especialidad = Especialidad.Cardiologia,
+            id = "4", especialidad = Especialidad.Cardiologia,
             profesional = "Dr. Felipe Castaño", registro = "RM 40.967",
             fecha = Fecha("Mié", 7, 10, 2026), hora = "2:15 p. m.", duracionMin = 30,
             modalidad = Modalidad.Presencial, sede = "Sede Salitre", lugar = "Torre B, piso 5 · Av. Cl. 26 # 68C-61",
@@ -146,7 +147,7 @@ object Agenda {
             autorizacion = "AUT-2026-59318", cuotaModeradora = 5200,
         ),
         Cita(
-            id = "c5", especialidad = Especialidad.Laboratorio,
+            id = "5", especialidad = Especialidad.Laboratorio,
             profesional = "Toma de muestras", registro = "Laboratorio Vitalis",
             fecha = Fecha("Sáb", 10, 10, 2026), hora = "6:30 a. m.", duracionMin = 15,
             modalidad = Modalidad.Presencial, sede = "Sede Chapinero", lugar = "Primer piso · Cl. 63 # 13-22",
@@ -156,7 +157,7 @@ object Agenda {
             autorizacion = "AUT-2026-59480", cuotaModeradora = 0,
         ),
         Cita(
-            id = "c6", especialidad = Especialidad.Oftalmologia,
+            id = "6", especialidad = Especialidad.Oftalmologia,
             profesional = "Dra. Paula Herrera", registro = "RM 63.221",
             fecha = Fecha("Mar", 13, 10, 2026), hora = "9:00 a. m.", duracionMin = 30,
             modalidad = Modalidad.Presencial, sede = "Sede Salitre", lugar = "Torre A, piso 3 · Av. Cl. 26 # 68C-61",
@@ -166,7 +167,7 @@ object Agenda {
             autorizacion = "AUT-2026-59711", cuotaModeradora = 5200,
         ),
         Cita(
-            id = "c7", especialidad = Especialidad.Dermatologia,
+            id = "7", especialidad = Especialidad.Dermatologia,
             profesional = "Dr. Julián Pardo", registro = "RM 58.340",
             fecha = Fecha("Mar", 22, 9, 2026), hora = "11:20 a. m.", duracionMin = 20,
             modalidad = Modalidad.Presencial, sede = "Sede Usaquén", lugar = "Consultorio 31 · Cra. 7 # 119-14",
@@ -176,7 +177,7 @@ object Agenda {
             autorizacion = "AUT-2026-57102", cuotaModeradora = 5200,
         ),
         Cita(
-            id = "c8", especialidad = Especialidad.Fisioterapia,
+            id = "8", especialidad = Especialidad.Fisioterapia,
             profesional = "Ft. Daniel Suárez", registro = "TP 30.518",
             fecha = Fecha("Jue", 10, 9, 2026), hora = "5:00 p. m.", duracionMin = 45,
             modalidad = Modalidad.Presencial, sede = "Sede Chapinero", lugar = "Gimnasio terapéutico · Cl. 63 # 13-22",
@@ -186,7 +187,7 @@ object Agenda {
             autorizacion = "AUT-2026-56390", cuotaModeradora = 5200,
         ),
         Cita(
-            id = "c9", especialidad = Especialidad.Pediatria,
+            id = "9", especialidad = Especialidad.Pediatria,
             profesional = "Dra. Catalina Vega", registro = "RM 49.875",
             fecha = Fecha("Lun", 7, 9, 2026), hora = "8:40 a. m.", duracionMin = 20,
             modalidad = Modalidad.Presencial, sede = "Sede Salitre", lugar = "Torre A, piso 2 · Av. Cl. 26 # 68C-61",

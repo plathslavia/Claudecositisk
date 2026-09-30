@@ -10,6 +10,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -68,6 +69,8 @@ import com.vitalis.eps.data.Modalidad
 import com.vitalis.eps.data.iniciales
 import com.vitalis.eps.data.pesos
 import com.vitalis.eps.theme.Vitalis
+import com.vitalis.eps.theme.colorTarjeta
+import com.vitalis.eps.theme.esOscuro
 
 /**
  * Vista Detalle: toda la información de la cita elegida en la vista Maestro.
@@ -80,12 +83,14 @@ fun PantallaDetalle(
     onCambiarEstado: (Estado) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    BoxWithConstraints(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // Con el celular de lado hay poca altura: el encabezado se hace más bajo.
+        val compacto = maxHeight < 520.dp
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Encabezado(cita, onVolver)
+            Encabezado(cita, onVolver, compacto)
             Column(
                 Modifier.widthIn(max = 720.dp).padding(horizontal = 20.dp).padding(top = 22.dp, bottom = 140.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
@@ -105,18 +110,18 @@ fun PantallaDetalle(
 }
 
 @Composable
-private fun Encabezado(cita: Cita, onVolver: (() -> Unit)?) {
+private fun Encabezado(cita: Cita, onVolver: (() -> Unit)?, compacto: Boolean) {
     val color = cita.especialidad.color
-    Box(Modifier.fillMaxWidth().height(372.dp)) {
+    Box(Modifier.fillMaxWidth().height(if (compacto) 262.dp else 372.dp)) {
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(318.dp)
+                .height(if (compacto) 208.dp else 318.dp)
                 .clip(RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp))
                 .background(Brush.linearGradient(listOf(color, Vitalis.Indigo, Vitalis.Noche))),
         ) {
             LineaPulso(
-                Modifier.padding(top = 70.dp).fillMaxWidth().height(90.dp),
+                Modifier.padding(top = if (compacto) 30.dp else 70.dp).fillMaxWidth().height(90.dp),
                 color = Color.White,
                 animada = cita.estado.esProxima,
             )
@@ -142,7 +147,11 @@ private fun Encabezado(cita: Cita, onVolver: (() -> Unit)?) {
                     color = Vitalis.Teal,
                 )
                 Spacer(Modifier.height(6.dp))
-                Text(cita.especialidad.nombre, style = MaterialTheme.typography.displaySmall, color = Color.White)
+                Text(
+                    cita.especialidad.nombre,
+                    style = if (compacto) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.displaySmall,
+                    color = Color.White,
+                )
                 Spacer(Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Avatar(iniciales(cita.profesional), color, tamano = 38.dp)
@@ -166,7 +175,7 @@ private fun Tiquete(cita: Cita, modifier: Modifier) {
             .fillMaxWidth()
             .shadow(18.dp, RoundedCornerShape(24.dp), ambientColor = Vitalis.Noche.copy(alpha = 0.25f), spotColor = Vitalis.Noche.copy(alpha = 0.25f))
             .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
+            .background(colorTarjeta)
             .height(IntrinsicSize.Min)
             .padding(vertical = 16.dp),
     ) {
@@ -176,7 +185,7 @@ private fun Tiquete(cita: Cita, modifier: Modifier) {
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(etiqueta.uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.height(4.dp))
-                Text(valor, style = MaterialTheme.typography.titleMedium, color = Vitalis.Noche, textAlign = TextAlign.Center)
+                Text(valor, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.Center)
             }
         }
     }
@@ -189,19 +198,19 @@ private fun Lugar(cita: Cita) {
         Modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.large)
-            .background(Color.White)
+            .background(colorTarjeta)
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(46.dp).clip(RoundedCornerShape(14.dp)).background(if (virtual) Vitalis.VioletaClaro else Vitalis.TealClaro),
+            Modifier.size(46.dp).clip(RoundedCornerShape(14.dp)).background((if (virtual) Vitalis.Violeta else Vitalis.Teal).copy(alpha = if (esOscuro) 0.2f else 0.14f)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 if (virtual) Icons.Rounded.Videocam else Icons.Rounded.LocationOn,
                 contentDescription = null,
-                tint = if (virtual) Vitalis.Violeta else Vitalis.TealOscuro,
+                tint = if (virtual) Vitalis.Violeta else if (esOscuro) Vitalis.Teal else Vitalis.TealOscuro,
                 modifier = Modifier.size(24.dp),
             )
         }
@@ -229,7 +238,7 @@ private fun ListaPreparacion(cita: Cita) {
         Modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.large)
-            .background(Color.White)
+            .background(colorTarjeta)
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large),
     ) {
         cita.preparacion.forEachIndexed { i, paso ->
@@ -268,7 +277,7 @@ private fun Autorizacion(cita: Cita) {
         Modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.large)
-            .background(Color.White)
+            .background(colorTarjeta)
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large),
     ) {
         filas.forEachIndexed { i, (icono, etiqueta, valor) ->
@@ -293,7 +302,7 @@ private fun FilaDato(icono: ImageVector, etiqueta: String, valor: String) {
 private fun BarraAcciones(cita: Cita, onCambiarEstado: (Estado) -> Unit, modifier: Modifier) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = Color.White,
+        color = colorTarjeta,
         shadowElevation = 18.dp,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
@@ -330,7 +339,7 @@ private fun BarraAcciones(cita: Cita, onCambiarEstado: (Estado) -> Unit, modifie
                         }
                     }
                     Estado.Confirmada -> {
-                        Aviso(Icons.Rounded.CheckCircle, "Asistencia confirmada", "Te recordaremos un día antes.", Vitalis.TealOscuro, Modifier.weight(1f))
+                        Aviso(Icons.Rounded.CheckCircle, "Asistencia confirmada", "Te recordaremos un día antes.", colorEstado(Estado.Confirmada).second, Modifier.weight(1f))
                         OutlinedButton(
                             onClick = { onCambiarEstado(Estado.Cancelada) },
                             modifier = Modifier.height(50.dp),
@@ -340,7 +349,7 @@ private fun BarraAcciones(cita: Cita, onCambiarEstado: (Estado) -> Unit, modifie
                     }
                     Estado.Atendida -> Aviso(
                         Icons.Rounded.TaskAlt, "Cita atendida", "El resumen de la consulta ya está en tu historia clínica.",
-                        Vitalis.Indigo, Modifier.weight(1f),
+                        colorEstado(Estado.Atendida).second, Modifier.weight(1f),
                     )
                     Estado.Cancelada -> Aviso(
                         Icons.Rounded.EventBusy, "Cita cancelada", "Puedes pedir una nueva por la línea 24/7 o por WhatsApp.",

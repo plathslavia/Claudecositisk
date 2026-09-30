@@ -9,6 +9,12 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -24,7 +30,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.vitalis.eps.data.Estado
 import com.vitalis.eps.theme.VitalisTheme
 import com.vitalis.eps.ui.EstadoAgenda
 import com.vitalis.eps.ui.PantallaDetalle
@@ -62,12 +72,27 @@ private fun destinoDesde(texto: String): Destino = when {
 private val ANCHO_DOS_PANELES = 840.dp
 
 @Composable
-fun App(inicio: List<Destino> = listOf(Destino.Principal)) {
-    VitalisTheme {
+fun App(inicio: List<Destino> = listOf(Destino.Principal), oscuroInicial: Boolean? = null) {
+    // Nulo = seguir el tema del sistema; el botón sol/luna lo fija en claro u oscuro.
+    var oscuroElegido by rememberSaveable { mutableStateOf(oscuroInicial) }
+    val oscuro = oscuroElegido ?: isSystemInDarkTheme()
+    VitalisTheme(oscuro) {
         // Pila de navegación guardada como texto para que sobreviva a la rotación de pantalla.
         var pilaTexto by rememberSaveable { mutableStateOf(inicio.joinToString("|") { it.aTexto() }) }
         val pila = pilaTexto.split("|").map(::destinoDesde)
         val agenda = remember { EstadoAgenda() }
+        val alcance = rememberCoroutineScope()
+        var intento by remember { mutableIntStateOf(0) }
+
+        // Al abrir la app (y cada vez que se prueba otra dirección) se leen las citas de XAMPP.
+        LaunchedEffect(agenda.urlServidor, intento) { agenda.sincronizar() }
+
+        val cambiarTema = { oscuroElegido = !oscuro }
+        val reintentar: (String) -> Unit = { url ->
+            agenda.urlServidor = url
+            intento++
+        }
+        val cambiarEstado = { id: String, estado: Estado -> agenda.cambiarEstado(id, estado, alcance) }
 
         fun ir(destino: Destino) {
             pilaTexto = (pila + destino).joinToString("|") { it.aTexto() }
@@ -78,16 +103,29 @@ fun App(inicio: List<Destino> = listOf(Destino.Principal)) {
 
         BotonAtras(enabled = pila.size > 1, onBack = ::volver)
 
-        BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        BoxWithConstraints(
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                // Con el celular de lado, deja libre la zona de la cámara y de los botones del sistema.
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),
+        ) {
             val dosPaneles = maxWidth >= ANCHO_DOS_PANELES
             val actual = pila.last()
-            BarraDeEstadoClara(clara = actual is Destino.Principal || (actual is Destino.Detalle && !dosPaneles))
+            BarraDeEstadoClara(clara = oscuro || actual is Destino.Principal || (actual is Destino.Detalle && !dosPaneles))
 
             if (dosPaneles) {
-                PantallaAncha(pila, agenda, ::ir, alInicio = { pilaTexto = Destino.Principal.aTexto() }, onCambiarDetalle = { id ->
-                    val base = pila.filterNot { it is Destino.Detalle }
-                    pilaTexto = (base + Destino.Detalle(id)).joinToString("|") { it.aTexto() }
-                })
+                PantallaAncha(
+                    pila, agenda, ::ir,
+                    alInicio = { pilaTexto = Destino.Principal.aTexto() },
+                    onCambiarDetalle = { id ->
+                        val base = pila.filterNot { it is Destino.Detalle }
+                        pilaTexto = (base + Destino.Detalle(id)).joinToString("|") { it.aTexto() }
+                    },
+                    onCambiarTema = cambiarTema,
+                    onReintentar = reintentar,
+                    onCambiarEstado = cambiarEstado,
+                )
             } else {
                 AnimatedContent(
                     targetState = pila,
@@ -96,16 +134,18 @@ fun App(inicio: List<Destino> = listOf(Destino.Principal)) {
                     label = "navegacion",
                 ) { estado ->
                     when (val destino = estado.last()) {
-                        Destino.Principal -> PantallaPrincipal(agenda.proxima, onVerCitas = { ir(Destino.Maestro) })
+                        Destino.Principal -> PantallaPrincipal(agenda.proxima, onVerCitas = { ir(Destino.Maestro) }, onCambiarTema = cambiarTema)
                         Destino.Maestro -> PantallaMaestro(
                             estado = agenda,
                             seleccionadaId = null,
                             onVolver = ::volver,
                             onSeleccionar = { ir(Destino.Detalle(it.id)) },
+                            onCambiarTema = cambiarTema,
+                            onReintentar = reintentar,
                         )
                         is Destino.Detalle -> {
                             val cita = agenda.cita(destino.citaId) ?: agenda.citas.first()
-                            PantallaDetalle(cita, onVolver = ::volver, onCambiarEstado = { agenda.cambiarEstado(cita.id, it) })
+                            PantallaDetalle(cita, onVolver = ::volver, onCambiarEstado = { cambiarEstado(cita.id, it) })
                         }
                     }
                 }
@@ -138,10 +178,13 @@ private fun PantallaAncha(
     ir: (Destino) -> Unit,
     alInicio: () -> Unit,
     onCambiarDetalle: (String) -> Unit,
+    onCambiarTema: () -> Unit,
+    onReintentar: (String) -> Unit,
+    onCambiarEstado: (String, Estado) -> Unit,
 ) {
     val actual = pila.last()
     if (actual is Destino.Principal) {
-        PantallaPrincipal(agenda.proxima, onVerCitas = { ir(Destino.Maestro) })
+        PantallaPrincipal(agenda.proxima, onVerCitas = { ir(Destino.Maestro) }, onCambiarTema = onCambiarTema)
         return
     }
     val seleccionado = (actual as? Destino.Detalle)?.citaId
@@ -151,6 +194,8 @@ private fun PantallaAncha(
             seleccionadaId = seleccionado,
             onVolver = alInicio,
             onSeleccionar = { onCambiarDetalle(it.id) },
+            onCambiarTema = onCambiarTema,
+            onReintentar = onReintentar,
             modifier = Modifier.width(420.dp).fillMaxHeight(),
         )
         Box(Modifier.width(1.dp).fillMaxHeight().background(MaterialTheme.colorScheme.outlineVariant))
@@ -166,7 +211,7 @@ private fun PantallaAncha(
                 if (cita == null) {
                     SinSeleccion()
                 } else {
-                    PantallaDetalle(cita, onVolver = null, onCambiarEstado = { agenda.cambiarEstado(cita.id, it) })
+                    PantallaDetalle(cita, onVolver = null, onCambiarEstado = { onCambiarEstado(cita.id, it) })
                 }
             }
         }

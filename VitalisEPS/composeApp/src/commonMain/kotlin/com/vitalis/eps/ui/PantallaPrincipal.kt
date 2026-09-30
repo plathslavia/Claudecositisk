@@ -54,17 +54,19 @@ import com.vitalis.eps.data.Empresa
 import com.vitalis.eps.data.TipoContacto
 import com.vitalis.eps.data.TipoServicio
 import com.vitalis.eps.theme.Vitalis
+import com.vitalis.eps.theme.colorTarjeta
+import com.vitalis.eps.theme.esOscuro
 
 /** Vista Principal (Main): pantalla de entrada con la información de la EPS. */
 @Composable
-fun PantallaPrincipal(proxima: Cita?, onVerCitas: () -> Unit, modifier: Modifier = Modifier) {
+fun PantallaPrincipal(proxima: Cita?, onVerCitas: () -> Unit, onCambiarTema: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState()),
     ) {
-        Portada(proxima, onVerCitas)
+        Portada(proxima, onVerCitas, onCambiarTema)
         Column(
             Modifier.padding(horizontal = 20.dp).padding(top = 24.dp),
             verticalArrangement = Arrangement.spacedBy(28.dp),
@@ -86,7 +88,7 @@ fun PantallaPrincipal(proxima: Cita?, onVerCitas: () -> Unit, modifier: Modifier
 }
 
 @Composable
-private fun Portada(proxima: Cita?, onVerCitas: () -> Unit) {
+private fun Portada(proxima: Cita?, onVerCitas: () -> Unit, onCambiarTema: () -> Unit) {
     Box(
         Modifier
             .fillMaxWidth()
@@ -109,6 +111,7 @@ private fun Portada(proxima: Cita?, onVerCitas: () -> Unit) {
                 ) {
                     Text("Hola, ${Empresa.AFILIADO.substringBefore(" ")}", style = MaterialTheme.typography.labelMedium, color = Color.White)
                 }
+                BotonTema(onCambiarTema, tinta = Color.White)
             }
             Spacer(Modifier.height(56.dp))
             Text(
@@ -184,14 +187,14 @@ private fun Seccion(titulo: String, contenido: @Composable () -> Unit) {
 
 @Composable
 private fun Cifras() {
-    val acentos = listOf(Vitalis.TealOscuro, Vitalis.Violeta, Vitalis.Indigo)
+    val acentos = if (esOscuro) listOf(Vitalis.Teal, Color(0xFFA99DFF), Color(0xFF8FB4FF)) else listOf(Vitalis.TealOscuro, Vitalis.Violeta, Vitalis.Indigo)
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Empresa.cifras.forEachIndexed { i, cifra ->
             Column(
                 Modifier
                     .weight(1f)
                     .clip(MaterialTheme.shapes.large)
-                    .background(Color.White)
+                    .background(colorTarjeta)
                     .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large)
                     .padding(vertical = 16.dp, horizontal = 12.dp),
             ) {
@@ -204,8 +207,13 @@ private fun Cifras() {
 
 @Composable
 private fun TarjetaProposito(icono: ImageVector, titulo: String, texto: String, oscura: Boolean, modifier: Modifier) {
-    val fondo = if (oscura) Vitalis.Noche else Vitalis.VioletaClaro
-    val tinta = if (oscura) Color.White else Vitalis.Tinta
+    val fondo = when {
+        oscura && esOscuro -> Vitalis.Indigo
+        oscura -> Vitalis.Noche
+        esOscuro -> MaterialTheme.colorScheme.tertiaryContainer
+        else -> Vitalis.VioletaClaro
+    }
+    val tinta = if (oscura || esOscuro) Color.White else Vitalis.Tinta
     Column(modifier.clip(MaterialTheme.shapes.large).background(fondo).padding(16.dp)) {
         Box(
             Modifier.size(36.dp).clip(CircleShape).background(if (oscura) Vitalis.Teal else Vitalis.Violeta),
@@ -237,7 +245,7 @@ private fun Servicios() {
                         Modifier
                             .weight(1f)
                             .clip(MaterialTheme.shapes.large)
-                            .background(Color.White)
+                            .background(colorTarjeta)
                             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large)
                             .padding(14.dp),
                     ) {

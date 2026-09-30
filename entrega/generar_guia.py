@@ -211,7 +211,10 @@ def llenar(doc):
                   "Se construyó en Android Studio con Kotlin Multiplatform y Compose Multiplatform: la interfaz se escribe una sola vez "
                   "y se ejecuta en Android y en escritorio (Cross Platform). Tiene tres vistas: Principal, con la información de la EPS "
                   "y la próxima cita; Maestro, con la lista de citas del afiliado; y Detalle, con toda la información de la cita elegida, "
-                  "donde se puede confirmar o cancelar. El código fuente está en la carpeta VitalisEPS del repositorio.", {})],
+                  "donde se puede confirmar o cancelar. Las citas se guardan en una base de datos MySQL de XAMPP y la app las "
+                  "lee y actualiza a través de una API en PHP; si el servidor no está encendido, muestra datos de ejemplo. "
+                  "Incluye modo claro y oscuro y se adapta al celular de lado y a tablets. El código fuente está en la carpeta "
+                  "VitalisEPS del repositorio.", {})],
                 estilo=None, izquierda=0, despues=120, antes=160),
     ])
 
@@ -241,6 +244,11 @@ def llenar(doc):
         fila_imagenes(doc, ["07_tablet_maestro_detalle.png"], 5.6),
         pie("Figura 7. En pantallas anchas (tablet o escritorio) el Maestro y el Detalle se muestran lado a lado, "
             "como la MasterDetailPage/FlyoutPage de Xamarin."),
+        fila_imagenes(doc, ["08_oscuro_principal.png", "09_oscuro_maestro.png", "10_oscuro_detalle.png"], 1.55),
+        pie("Figuras 8 a 10. Las tres vistas en modo oscuro (sigue el tema del celular o se cambia con el botón sol/luna)."),
+        fila_imagenes(doc, ["11_horizontal.png"], 5.6),
+        pie("Figura 11. Con el celular de lado: la lista de citas se desplaza completa, los filtros quedan fijos arriba y "
+            "el detalle usa un encabezado más bajo."),
     ])
 
     presentar = buscar(doc, "Presentar la aplicación funcionando al docente")
@@ -349,6 +357,13 @@ def llenar(doc):
         ("Vista Detalle (ui/PantallaDetalle.kt). ", "Encabezado con el color de la especialidad, profesional, tarjeta con fecha, "
          "hora y duración, lugar o videollamada, motivo, lista de preparación que se puede marcar, datos de autorización y una "
          "barra de acciones que cambia según el estado: confirmar o cancelar la cita. El cambio se refleja también en la lista."),
+        ("Base de datos y API (carpeta servidor). ", "El script vitalis_eps.sql crea en MySQL (XAMPP) las tablas afiliados, "
+         "especialidades, profesionales, sedes, citas (maestro) y preparaciones (detalle). La API en PHP (htdocs/vitalis_api) "
+         "expone citas.php, que devuelve las citas en JSON, y cambiar_estado.php, que guarda la confirmación o la cancelación "
+         "con consultas preparadas (PDO). La app se conecta con Ktor; en el emulador la dirección es http://10.0.2.2/vitalis_api."),
+        ("Modo oscuro y diseño adaptable. ", "Dos esquemas de color (claro y oscuro) que siguen el tema del sistema o se cambian "
+         "con el botón sol/luna. Con el celular de lado, la vista Maestro es una sola lista desplazable y el Detalle reduce "
+         "su encabezado; además se respetan los márgenes de la cámara."),
         ("Navegación (App.kt). ", "Pila de navegación Principal → Maestro → Detalle con transiciones animadas; el botón Atrás del "
          "sistema regresa a la vista anterior. Con 840 dp de ancho o más (tablet o escritorio) el Maestro y el Detalle se "
          "muestran lado a lado."),
@@ -380,7 +395,10 @@ def llenar(doc):
         "confirm or cancel the appointment, and the change also appears in the list. The system back button always returns to "
         "the previous screen. On wide screens, such as tablets or desktop, the list and the detail are shown side by side.",
         "The user interface is written once and shared between Android and desktop. Platform-specific parts, like the back "
-        "button, use Kotlin's expect/actual mechanism, which plays the same role as Xamarin's DependencyService. Thank you.",
+        "button, use Kotlin's expect/actual mechanism, which plays the same role as Xamarin's DependencyService.",
+        "The appointments are stored in a MySQL database running on XAMPP. A small PHP API returns them as JSON and saves the "
+        "changes, so when a patient confirms an appointment in the app, the database is updated. The app also has a dark "
+        "mode and adapts to landscape phones and tablets. Thank you.",
     ]
     insertar_despues(entrega, [parrafo([("Guion para la exposición en inglés (English presentation script):", NEG)],
                                        estilo=None, alinear="left", despues=60, antes=160)]
@@ -391,7 +409,8 @@ def llenar(doc):
     celda_clave = clave.getparent().getparent().getnext().find(f"{qn('w:tc')}/{qn('w:p')}")
     celda_clave.append(corrida(
         "Maestro-detalle (Master-Detail), multiplataforma (Cross Platform), Kotlin Multiplatform, Compose Multiplatform, "
-        "Android Studio, navegación, LazyColumn, diseño adaptativo, expect/actual, DependencyService.", tam=18))
+        "Android Studio, navegación, LazyColumn, diseño adaptativo, modo oscuro, expect/actual, DependencyService, MySQL, XAMPP, "
+        "API REST, PHP.", tam=18))
 
     # Referencias consultadas, después de la bibliografía recomendada.
     ultima = buscar(doc, "Napier R, Kumar M")
@@ -417,7 +436,8 @@ def main():
     llenar(doc)
     doc.save(str(SALIDA))
     faltan = [n for n in ["01_principal.png", "02_principal_empresa.png", "03_principal_contacto.png", "04_maestro.png",
-                          "05_detalle.png", "06_detalle_info.png", "07_tablet_maestro_detalle.png"]
+                          "05_detalle.png", "06_detalle_info.png", "07_tablet_maestro_detalle.png",
+                          "08_oscuro_principal.png", "09_oscuro_maestro.png", "10_oscuro_detalle.png", "11_horizontal.png"]
               if not (CAPTURAS / n).exists()]
     print(f"Guía generada: {SALIDA.relative_to(RAIZ)}")
     if faltan:

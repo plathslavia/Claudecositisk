@@ -26,6 +26,38 @@ Si Android Studio avisa que falta, pulsar "Install missing SDK" o instalarlo en 
 Si la sincronización falla con un error de versión de Java, ir a
 *Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK* y elegir **JDK 17** o **21**.
 
+## Conectar con la base de datos (XAMPP)
+
+La app lee y guarda las citas en MySQL a través de una pequeña API en PHP. Si el servidor no responde,
+muestra datos de ejemplo y lo avisa con la píldora "Sin servidor · datos de ejemplo" en *Mis citas*.
+
+1. Abre el **XAMPP Control Panel** y pulsa **Start** en **Apache** y en **MySQL**.
+2. Entra a <http://localhost/phpmyadmin> → pestaña **Importar** → elige `servidor/vitalis_eps.sql` → **Continuar**.
+   Se crea la base `vitalis_eps` con sus tablas y datos.
+3. Copia la carpeta `servidor/vitalis_api` dentro de `C:\xampp\htdocs\` (queda `C:\xampp\htdocs\vitalis_api`).
+4. Prueba en el navegador: <http://localhost/vitalis_api/> debe responder `"ok": true` y el número de citas.
+5. Ejecuta la app:
+   - **Emulador de Android:** funciona tal cual; `10.0.2.2` es el `localhost` del computador.
+   - **Celular real:** conéctalo a la misma red Wi-Fi que el PC, busca la IP del PC (`ipconfig` en Windows),
+     toca la píldora de conexión en *Mis citas* y escribe `http://TU-IP/vitalis_api`. Si no conecta, permite
+     Apache en el Firewall de Windows.
+   - **Escritorio:** usa `http://localhost/vitalis_api`.
+
+Si tu MySQL tiene contraseña, cámbiala en `vitalis_api/conexion.php` (`DB_CLAVE`).
+
+| Archivo | Qué hace |
+|---|---|
+| `servidor/vitalis_eps.sql` | Crea las tablas `afiliados`, `especialidades`, `profesionales`, `sedes`, `citas` y `preparaciones` con datos de ejemplo |
+| `vitalis_api/citas.php` | `GET ?afiliado=1` → citas del afiliado con sus pasos de preparación, en JSON |
+| `vitalis_api/cambiar_estado.php` | `POST {"id": 4, "estado": "Confirmada"}` → guarda la confirmación o cancelación |
+| `vitalis_api/conexion.php` | Datos de conexión a MySQL (usuario `root` sin contraseña, como viene XAMPP) |
+
+En la app, el cliente está en `data/Servidor.kt` (Ktor) y la lógica de sincronización en `ui/EstadoAgenda.kt`.
+
+## Modo oscuro
+
+Sigue el tema del celular. El botón sol/luna (en la portada y en *Mis citas*) lo cambia manualmente.
+
 ## Ejecutar en escritorio
 
 ```bash

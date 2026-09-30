@@ -12,6 +12,17 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.LightMode
+import androidx.compose.material.icons.rounded.Storage
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -56,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import com.vitalis.eps.data.Especialidad
 import com.vitalis.eps.data.Estado
 import com.vitalis.eps.theme.Vitalis
+import com.vitalis.eps.theme.esOscuro
 
 /**
  * Resorte críticamente amortiguado (sin rebote), usado en toda la app
@@ -198,11 +210,24 @@ fun IconoEspecialidad(e: Especialidad, tamano: Dp = 40.dp, modifier: Modifier = 
     }
 }
 
-fun colorEstado(estado: Estado): Pair<Color, Color> = when (estado) {
-    Estado.Confirmada -> Vitalis.TealClaro to Vitalis.TealOscuro
-    Estado.PorConfirmar -> Vitalis.AmbarClaro to Color(0xFFB45309)
-    Estado.Atendida -> Color(0xFFE6ECF8) to Vitalis.Indigo
-    Estado.Cancelada -> Vitalis.CoralClaro to Color(0xFFC0343B)
+/** Colores (fondo, texto) de cada estado, ajustados para modo claro u oscuro. */
+@Composable
+fun colorEstado(estado: Estado): Pair<Color, Color> {
+    if (esOscuro) {
+        val texto = when (estado) {
+            Estado.Confirmada -> Vitalis.Teal
+            Estado.PorConfirmar -> Vitalis.Ambar
+            Estado.Atendida -> Color(0xFFA5B4FC)
+            Estado.Cancelada -> Color(0xFFFF8A90)
+        }
+        return texto.copy(alpha = 0.16f) to texto
+    }
+    return when (estado) {
+        Estado.Confirmada -> Vitalis.TealClaro to Vitalis.TealOscuro
+        Estado.PorConfirmar -> Vitalis.AmbarClaro to Color(0xFFB45309)
+        Estado.Atendida -> Color(0xFFE6ECF8) to Vitalis.Indigo
+        Estado.Cancelada -> Vitalis.CoralClaro to Color(0xFFC0343B)
+    }
 }
 
 /** Etiqueta de estado de una cita, con un punto de color. */
@@ -228,4 +253,61 @@ fun Avatar(iniciales: String, color: Color, tamano: Dp = 44.dp, modifier: Modifi
     ) {
         Text(iniciales, style = MaterialTheme.typography.titleSmall, color = Color.White)
     }
+}
+
+/** Botón sol/luna para pasar de modo claro a oscuro y viceversa. */
+@Composable
+fun BotonTema(onCambiar: () -> Unit, tinta: Color = MaterialTheme.colorScheme.onSurface) {
+    IconButton(onClick = onCambiar) {
+        Icon(
+            if (esOscuro) Icons.Rounded.LightMode else Icons.Rounded.DarkMode,
+            contentDescription = if (esOscuro) "Cambiar a modo claro" else "Cambiar a modo oscuro",
+            tint = tinta,
+        )
+    }
+}
+
+/** Diálogo para ver el estado de la conexión y cambiar la dirección de la API de XAMPP. */
+@Composable
+fun DialogoServidor(
+    urlActual: String,
+    origen: Origen,
+    mensaje: String?,
+    onProbar: (String) -> Unit,
+    onCerrar: () -> Unit,
+) {
+    var url by remember { mutableStateOf(urlActual) }
+    AlertDialog(
+        onDismissRequest = onCerrar,
+        icon = { Icon(Icons.Rounded.Storage, contentDescription = null) },
+        title = { Text("Servidor XAMPP") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    when (origen) {
+                        Origen.Servidor -> "Conectado. Las citas se leen y se guardan en MySQL."
+                        Origen.Conectando -> "Probando la conexión…"
+                        Origen.Ejemplo -> mensaje ?: "Sin conexión. Se muestran datos de ejemplo."
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                OutlinedTextField(
+                    value = url,
+                    onValueChange = { url = it },
+                    label = { Text("Dirección de la API") },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    "Emulador: http://10.0.2.2/vitalis_api\nCelular: http://IP-del-PC/vitalis_api (misma red Wi-Fi)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onProbar(url.trim()) }, enabled = origen != Origen.Conectando) { Text("Probar conexión") }
+        },
+        dismissButton = { TextButton(onClick = onCerrar) { Text("Cerrar") } },
+    )
 }

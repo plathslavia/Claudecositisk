@@ -1,12 +1,17 @@
 package com.vitalis.eps.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -42,7 +47,7 @@ object Vitalis {
     val Linea = Color(0xFFE3E8F1)
 }
 
-private val colores = lightColorScheme(
+private val coloresClaros = lightColorScheme(
     primary = Vitalis.Noche,
     onPrimary = Color.White,
     primaryContainer = Color(0xFFE6ECF8),
@@ -69,6 +74,45 @@ private val colores = lightColorScheme(
     outline = Color(0xFFB7C0D1),
     outlineVariant = Vitalis.Linea,
 )
+
+/** Modo oscuro: fondos azul noche profundo, tarjetas un tono más claras y el teal como color principal. */
+private val coloresOscuros = darkColorScheme(
+    primary = Vitalis.Teal,
+    onPrimary = Vitalis.Noche,
+    primaryContainer = Color(0xFF1B2744),
+    onPrimaryContainer = Color(0xFFE6ECF8),
+    secondary = Vitalis.Teal,
+    onSecondary = Vitalis.Noche,
+    secondaryContainer = Color(0xFF0E3A36),
+    onSecondaryContainer = Color(0xFFB5F5E8),
+    tertiary = Color(0xFFA99DFF),
+    onTertiary = Color(0xFF1B1446),
+    tertiaryContainer = Color(0xFF2A2360),
+    onTertiaryContainer = Color(0xFFE2DDFF),
+    error = Color(0xFFFF7A80),
+    background = Color(0xFF070D1C),
+    onBackground = Color(0xFFE8EDF7),
+    surface = Color(0xFF0F172B),
+    onSurface = Color(0xFFE8EDF7),
+    surfaceVariant = Color(0xFF1A2440),
+    onSurfaceVariant = Color(0xFF9AA6BD),
+    surfaceContainerLowest = Color(0xFF111A30),
+    surfaceContainerLow = Color(0xFF131D34),
+    surfaceContainer = Color(0xFF17213A),
+    surfaceContainerHigh = Color(0xFF1C2742),
+    outline = Color(0xFF5A6782),
+    outlineVariant = Color(0xFF223050),
+)
+
+/** Verdadero cuando el tema activo es oscuro. */
+val esOscuro: Boolean
+    @Composable @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.background.luminance() < 0.5f
+
+/** Color de las tarjetas: blanco en modo claro, azul noche elevado en modo oscuro. */
+val colorTarjeta: Color
+    @Composable @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.surfaceContainerLowest
 
 @Composable
 private fun familiaTitulos() = FontFamily(
@@ -119,11 +163,10 @@ private val formas = Shapes(
 )
 
 @Composable
-fun VitalisTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = colores,
-        typography = tipografia(),
-        shapes = formas,
-        content = content,
-    )
+fun VitalisTheme(oscuro: Boolean, content: @Composable () -> Unit) {
+    val esquema = if (oscuro) coloresOscuros else coloresClaros
+    MaterialTheme(colorScheme = esquema, typography = tipografia(), shapes = formas) {
+        // Color de texto por defecto: sin esto, el texto sin color explícito sale negro también en modo oscuro.
+        CompositionLocalProvider(LocalContentColor provides esquema.onBackground, content = content)
+    }
 }

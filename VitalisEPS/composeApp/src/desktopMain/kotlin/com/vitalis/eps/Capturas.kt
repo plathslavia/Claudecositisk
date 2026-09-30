@@ -20,9 +20,12 @@ private class Captura(
     val densidad: Float = 2.625f,
     /** Cuánto desplazar hacia abajo (en "clics" de rueda del mouse) antes de capturar. */
     val desplazamiento: Float = 0f,
+    val oscuro: Boolean = false,
+    /** Dónde (fracción del ancho) se hace el desplazamiento; en pantallas de dos paneles elige cuál se mueve. */
+    val xDesplazamiento: Float = 0.5f,
 )
 
-private val detalle = Destino.Detalle("c4")
+private val detalle = Destino.Detalle("4")
 
 private val capturas = listOf(
     Captura("01_principal.png", listOf(Destino.Principal)),
@@ -33,8 +36,16 @@ private val capturas = listOf(
     Captura("06_detalle_info.png", listOf(Destino.Principal, Destino.Maestro, detalle), desplazamiento = 200f),
     Captura(
         "07_tablet_maestro_detalle.png",
-        listOf(Destino.Principal, Destino.Maestro, Destino.Detalle("c3")),
+        listOf(Destino.Principal, Destino.Maestro, Destino.Detalle("3")),
         anchoDp = 1280, altoDp = 800, densidad = 1.5f,
+    ),
+    Captura("08_oscuro_principal.png", listOf(Destino.Principal), oscuro = true),
+    Captura("09_oscuro_maestro.png", listOf(Destino.Principal, Destino.Maestro), oscuro = true),
+    Captura("10_oscuro_detalle.png", listOf(Destino.Principal, Destino.Maestro, Destino.Detalle("3")), oscuro = true),
+    Captura(
+        "11_horizontal.png",
+        listOf(Destino.Principal, Destino.Maestro, Destino.Detalle("6")),
+        anchoDp = 892, altoDp = 412, densidad = 2.625f, desplazamiento = 24f, xDesplazamiento = 0.2f,
     ),
 )
 
@@ -44,15 +55,18 @@ fun main(args: Array<String>) {
     for (c in capturas) {
         val ancho = (c.anchoDp * c.densidad).toInt()
         val alto = (c.altoDp * c.densidad).toInt()
-        val escena = ImageComposeScene(ancho, alto, Density(c.densidad)) { App(inicio = c.pila) }
+        val escena = ImageComposeScene(ancho, alto, Density(c.densidad)) { App(inicio = c.pila, oscuroInicial = c.oscuro) }
         var tiempo = 0L
         fun cuadros(n: Int) = repeat(n) { escena.render(tiempo); tiempo += 16_000_000L }
         cuadros(30)
+        // Da tiempo a que la app lea las citas de la API de XAMPP (si está encendida).
+        repeat(20) { Thread.sleep(100); cuadros(2) }
         if (c.desplazamiento > 0f) {
-            escena.sendPointerEvent(PointerEventType.Move, Offset(ancho / 2f, alto / 2f))
+            val punto = Offset(ancho * c.xDesplazamiento, alto / 2f)
+            escena.sendPointerEvent(PointerEventType.Move, punto)
             escena.sendPointerEvent(
                 PointerEventType.Scroll,
-                Offset(ancho / 2f, alto / 2f),
+                punto,
                 scrollDelta = Offset(0f, c.desplazamiento),
             )
             // El puntero sale de la ventana para que ningún elemento quede resaltado.

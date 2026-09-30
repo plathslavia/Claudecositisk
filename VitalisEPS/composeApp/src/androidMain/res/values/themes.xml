@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.Vitalis" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/fondo</item>
+    </style>
+    <color name="fondo">#FFF3F6FB</color>
+    <color name="marca">#FF0B1B3A</color>
+</resources>

@@ -102,6 +102,8 @@ data class Cita(
     val preparacion: List<String>,
     val autorizacion: String,
     val cuotaModeradora: Int,
+    val idAfiliado: Int = Empresa.ID_AFILIADO,
+    val paciente: String = Empresa.AFILIADO,
 )
 
 object Agenda {
@@ -196,6 +198,39 @@ object Agenda {
             preparacion = listOf("Trae el carné de vacunación"),
             autorizacion = "AUT-2026-55811", cuotaModeradora = 0,
         ),
+        Cita(
+            id = "10", especialidad = Especialidad.MedicinaGeneral,
+            profesional = "Dra. Laura Méndez", registro = "RM 52.184",
+            fecha = Fecha("Sáb", 3, 10, 2026), hora = "8:00 a. m.", duracionMin = 20,
+            modalidad = Modalidad.Presencial, sede = "Sede Usaquén", lugar = "Consultorio 15 · Cra. 7 # 119-14",
+            estado = Estado.Confirmada,
+            motivo = "Revisión de presión arterial.",
+            preparacion = listOf("No fumes ni tomes café 30 minutos antes"),
+            autorizacion = "AUT-2026-60110", cuotaModeradora = 5200,
+            idAfiliado = 2, paciente = "Andrés García",
+        ),
+        Cita(
+            id = "11", especialidad = Especialidad.Cardiologia,
+            profesional = "Dr. Felipe Castaño", registro = "RM 40.967",
+            fecha = Fecha("Vie", 9, 10, 2026), hora = "3:00 p. m.", duracionMin = 30,
+            modalidad = Modalidad.Presencial, sede = "Sede Salitre", lugar = "Torre B, piso 5 · Av. Cl. 26 # 68C-61",
+            estado = Estado.PorConfirmar,
+            motivo = "Control con electrocardiograma.",
+            preparacion = listOf("Trae los exámenes anteriores"),
+            autorizacion = "AUT-2026-60255", cuotaModeradora = 5200,
+            idAfiliado = 2, paciente = "Andrés García",
+        ),
+        Cita(
+            id = "12", especialidad = Especialidad.Psicologia,
+            profesional = "Dra. Mariana Ortiz", registro = "TP 118.502",
+            fecha = Fecha("Mar", 6, 10, 2026), hora = "6:00 p. m.", duracionMin = 50,
+            modalidad = Modalidad.Telemedicina, sede = "Videollamada", lugar = "El enlace se activa 10 minutos antes",
+            estado = Estado.PorConfirmar,
+            motivo = "Primera consulta de orientación.",
+            preparacion = listOf("Busca un lugar tranquilo y con buena señal"),
+            autorizacion = "AUT-2026-60301", cuotaModeradora = 5200,
+            idAfiliado = 3, paciente = "Cristóbal Moncada",
+        ),
     )
 
     fun porId(id: String): Cita? = citas.firstOrNull { it.id == id }
@@ -208,3 +243,79 @@ fun pesos(valor: Int): String =
 /** "Dra. Laura Méndez" -> "LM" */
 fun iniciales(nombre: String): String =
     nombre.split(" ").filter { it.isNotEmpty() && !it.endsWith(".") }.take(2).joinToString("") { it.first().uppercase() }
+
+// ---------------------------------------------------------------------------------------------
+//  Sesión, roles y catálogos del panel de administración
+// ---------------------------------------------------------------------------------------------
+
+enum class Rol { Afiliado, Admin }
+
+/** Sesión abierta. [token] es nulo en el modo sin conexión (cuentas de prueba locales). */
+data class Sesion(val token: String?, val rol: Rol, val nombre: String, val idAfiliado: Int?) {
+    val sinConexion get() = token == null
+    val primerNombre get() = nombre.substringBefore(" ")
+}
+
+data class Afiliado(val id: Int, val nombre: String, val documento: String)
+data class Profesional(val id: Int, val nombre: String, val registro: String, val especialidad: Especialidad)
+data class Sede(val id: Int, val nombre: String, val direccion: String)
+
+/** Datos que el administrador escribe en el formulario de nueva cita. */
+data class NuevaCita(
+    val idAfiliado: Int,
+    val idProfesional: Int,
+    val idSede: Int,
+    /** AAAA-MM-DD */
+    val fecha: String,
+    /** HH:MM, 24 horas */
+    val hora: String,
+    val duracionMin: Int,
+    val modalidad: Modalidad,
+    val motivo: String,
+    val cuotaModeradora: Int,
+    val preparacion: List<String>,
+)
+
+/** Los mismos catálogos del script SQL, para el modo sin conexión. */
+object Catalogos {
+    val afiliados = listOf(
+        Afiliado(1, "Camilo Casallas", "1020456789"),
+        Afiliado(2, "Andrés García", "1018223344"),
+        Afiliado(3, "Cristóbal Moncada", "1032667788"),
+    )
+    val profesionales = listOf(
+        Profesional(1, "Dra. Laura Méndez", "RM 52.184", Especialidad.MedicinaGeneral),
+        Profesional(2, "Dr. Santiago Rojas", "RM 77.410", Especialidad.Odontologia),
+        Profesional(3, "Dra. Mariana Ortiz", "TP 118.502", Especialidad.Psicologia),
+        Profesional(4, "Dr. Felipe Castaño", "RM 40.967", Especialidad.Cardiologia),
+        Profesional(5, "Toma de muestras", "Laboratorio Vitalis", Especialidad.Laboratorio),
+        Profesional(6, "Dra. Paula Herrera", "RM 63.221", Especialidad.Oftalmologia),
+        Profesional(7, "Dr. Julián Pardo", "RM 58.340", Especialidad.Dermatologia),
+        Profesional(8, "Ft. Daniel Suárez", "TP 30.518", Especialidad.Fisioterapia),
+        Profesional(9, "Dra. Catalina Vega", "RM 49.875", Especialidad.Pediatria),
+    )
+    val sedes = listOf(
+        Sede(1, "Sede Chapinero", "Cl. 63 # 13-22"),
+        Sede(2, "Sede Usaquén", "Cra. 7 # 119-14"),
+        Sede(3, "Sede Salitre", "Av. Cl. 26 # 68C-61"),
+        Sede(4, "Videollamada", ""),
+    )
+}
+
+/**
+ * Cuentas de prueba para el modo sin conexión (cuando XAMPP no está encendido).
+ * Son las mismas del script SQL; en el servidor las contraseñas se guardan cifradas con bcrypt.
+ */
+object CuentasDemo {
+    class Cuenta(val usuario: String, val clave: String, val sesion: Sesion)
+
+    val todas = listOf(
+        Cuenta("1020456789", "camilo123", Sesion(null, Rol.Afiliado, "Camilo Casallas", 1)),
+        Cuenta("1018223344", "andres123", Sesion(null, Rol.Afiliado, "Andrés García", 2)),
+        Cuenta("1032667788", "cristobal123", Sesion(null, Rol.Afiliado, "Cristóbal Moncada", 3)),
+        Cuenta("admin", "admin123", Sesion(null, Rol.Admin, "Administración Vitalis", null)),
+    )
+
+    fun validar(usuario: String, clave: String): Sesion? =
+        todas.firstOrNull { it.usuario == usuario.trim() && it.clave == clave }?.sesion
+}

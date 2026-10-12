@@ -213,6 +213,8 @@ def llenar(doc):
                   "y la próxima cita; Maestro, con la lista de citas del afiliado; y Detalle, con toda la información de la cita elegida, "
                   "donde se puede confirmar o cancelar. Las citas se guardan en una base de datos MySQL de XAMPP y la app las "
                   "lee y actualiza a través de una API en PHP; si el servidor no está encendido, muestra datos de ejemplo. "
+                  "Tiene inicio de sesión con dos roles: el afiliado ve solo sus citas y el administrador, desde un panel, crea "
+                  "citas y profesionales y gestiona las de todos los afiliados. "
                   "Incluye modo claro y oscuro y se adapta al celular de lado y a tablets. El código fuente está en la carpeta "
                   "VitalisEPS del repositorio.", {})],
                 estilo=None, izquierda=0, despues=120, antes=160),
@@ -249,14 +251,18 @@ def llenar(doc):
         fila_imagenes(doc, ["11_horizontal.png"], 5.6),
         pie("Figura 11. Con el celular de lado: la lista de citas se desplaza completa, los filtros quedan fijos arriba y "
             "el detalle usa un encabezado más bajo."),
+        fila_imagenes(doc, ["12_login.png", "13_admin.png", "14_admin_nueva_cita.png"], 1.55),
+        pie("Figuras 12 a 14. Inicio de sesión con cuentas de prueba, panel de administración (todas las citas, con "
+            "acciones por cita) y formulario para crear una cita nueva."),
     ])
 
     presentar = buscar(doc, "Presentar la aplicación funcionando al docente")
     insertar_despues(presentar, [
         parrafo("Para la presentación se abre la carpeta VitalisEPS en Android Studio, se espera la sincronización de Gradle, "
                 "se elige la configuración composeApp con un emulador o un celular conectado y se pulsa Run. Recorrido de la "
-                "demostración: Principal → Ver mis citas → filtrar o buscar → tocar una cita → Detalle → Confirmar asistencia → "
-                "botón Atrás del sistema (la cita aparece ahora como Confirmada en la lista).",
+                "demostración: Principal → Iniciar sesión (afiliado 1020456789 / camilo123) → Mis citas → filtrar o buscar → "
+                "tocar una cita → Detalle → Confirmar asistencia → Atrás (la cita aparece como Confirmada). Luego cerrar sesión, "
+                "entrar como administrador (admin / admin123), crear una cita para el afiliado y comprobar que él la ve.",
                 izquierda=720, despues=120, antes=60),
     ])
 
@@ -361,6 +367,14 @@ def llenar(doc):
          "especialidades, profesionales, sedes, citas (maestro) y preparaciones (detalle). La API en PHP (htdocs/vitalis_api) "
          "expone citas.php, que devuelve las citas en JSON, y cambiar_estado.php, que guarda la confirmación o la cancelación "
          "con consultas preparadas (PDO). La app se conecta con Ktor; en el emulador la dirección es http://10.0.2.2/vitalis_api."),
+        ("Inicio de sesión y roles. ", "Las tablas usuarios y sesiones guardan las cuentas (contraseñas cifradas con "
+         "bcrypt) y los tokens de sesión, que vencen a las 8 horas. login.php valida la contraseña con password_verify y "
+         "cada servicio comprueba el token y el rol: el afiliado solo ve y modifica sus citas, y las funciones de "
+         "administración responden 403 a quien no sea administrador. Sin servidor, la app funciona con cuentas de prueba."),
+        ("Panel de administración (ui/PantallaAdmin.kt y ui/Formularios.kt). ", "Lista de todas las citas con búsqueda, "
+         "filtros y un menú por cita (confirmar, marcar como atendida, cancelar o eliminar), lista de profesionales por "
+         "especialidad, formulario de nueva cita con calendario y reloj, y diálogo para agregar profesionales. Los datos "
+         "se validan en la app y otra vez en el servidor."),
         ("Modo oscuro y diseño adaptable. ", "Dos esquemas de color (claro y oscuro) que siguen el tema del sistema o se cambian "
          "con el botón sol/luna. Con el celular de lado, la vista Maestro es una sola lista desplazable y el Detalle reduce "
          "su encabezado; además se respetan los márgenes de la cámara."),
@@ -397,8 +411,11 @@ def llenar(doc):
         "The user interface is written once and shared between Android and desktop. Platform-specific parts, like the back "
         "button, use Kotlin's expect/actual mechanism, which plays the same role as Xamarin's DependencyService.",
         "The appointments are stored in a MySQL database running on XAMPP. A small PHP API returns them as JSON and saves the "
-        "changes, so when a patient confirms an appointment in the app, the database is updated. The app also has a dark "
-        "mode and adapts to landscape phones and tablets. Thank you.",
+        "changes, so when a patient confirms an appointment in the app, the database is updated.",
+        "There are two roles. A patient logs in with their ID number and only sees their own appointments. The "
+        "administrator has a panel to create appointments and doctors and to manage every appointment. Passwords are "
+        "stored with bcrypt, sessions use tokens that expire, and the server checks the role on every request. "
+        "The app also has a dark mode and adapts to landscape phones and tablets. Thank you.",
     ]
     insertar_despues(entrega, [parrafo([("Guion para la exposición en inglés (English presentation script):", NEG)],
                                        estilo=None, alinear="left", despues=60, antes=160)]
@@ -410,7 +427,7 @@ def llenar(doc):
     celda_clave.append(corrida(
         "Maestro-detalle (Master-Detail), multiplataforma (Cross Platform), Kotlin Multiplatform, Compose Multiplatform, "
         "Android Studio, navegación, LazyColumn, diseño adaptativo, modo oscuro, expect/actual, DependencyService, MySQL, XAMPP, "
-        "API REST, PHP.", tam=18))
+        "API REST, PHP, autenticación, roles, bcrypt.", tam=18))
 
     # Referencias consultadas, después de la bibliografía recomendada.
     ultima = buscar(doc, "Napier R, Kumar M")
@@ -437,7 +454,8 @@ def main():
     doc.save(str(SALIDA))
     faltan = [n for n in ["01_principal.png", "02_principal_empresa.png", "03_principal_contacto.png", "04_maestro.png",
                           "05_detalle.png", "06_detalle_info.png", "07_tablet_maestro_detalle.png",
-                          "08_oscuro_principal.png", "09_oscuro_maestro.png", "10_oscuro_detalle.png", "11_horizontal.png"]
+                          "08_oscuro_principal.png", "09_oscuro_maestro.png", "10_oscuro_detalle.png", "11_horizontal.png",
+                          "12_login.png", "13_admin.png", "14_admin_nueva_cita.png"]
               if not (CAPTURAS / n).exists()]
     print(f"Guía generada: {SALIDA.relative_to(RAIZ)}")
     if faltan:

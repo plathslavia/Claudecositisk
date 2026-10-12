@@ -39,6 +39,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.automirrored.rounded.Login
+import androidx.compose.material.icons.automirrored.rounded.Logout
+import androidx.compose.material.icons.rounded.AdminPanelSettings
+import androidx.compose.material3.TextButton
+import com.vitalis.eps.data.Rol
+import com.vitalis.eps.data.Sesion
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,10 +66,12 @@ import com.vitalis.eps.theme.esOscuro
 /** Vista Principal (Main): pantalla de entrada con la información de la EPS. */
 @Composable
 fun PantallaPrincipal(
+    sesion: Sesion?,
     proxima: Cita?,
-    onVerCitas: () -> Unit,
+    onAbrir: () -> Unit,
     onCambiarTema: () -> Unit,
     onElegirEstilo: () -> Unit,
+    onCerrarSesion: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -72,7 +80,7 @@ fun PantallaPrincipal(
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState()),
     ) {
-        Portada(proxima, onVerCitas, onCambiarTema, onElegirEstilo)
+        Portada(sesion, proxima, onAbrir, onCambiarTema, onElegirEstilo, onCerrarSesion)
         Column(
             Modifier.padding(horizontal = 20.dp).padding(top = 24.dp),
             verticalArrangement = Arrangement.spacedBy(28.dp),
@@ -94,7 +102,14 @@ fun PantallaPrincipal(
 }
 
 @Composable
-private fun Portada(proxima: Cita?, onVerCitas: () -> Unit, onCambiarTema: () -> Unit, onElegirEstilo: () -> Unit) {
+private fun Portada(
+    sesion: Sesion?,
+    proxima: Cita?,
+    onAbrir: () -> Unit,
+    onCambiarTema: () -> Unit,
+    onElegirEstilo: () -> Unit,
+    onCerrarSesion: () -> Unit,
+) {
     Box(
         Modifier
             .fillMaxWidth()
@@ -110,12 +125,18 @@ private fun Portada(proxima: Cita?, onVerCitas: () -> Unit, onCambiarTema: () ->
                     Text(Empresa.NOMBRE, style = MaterialTheme.typography.titleLarge, color = Color.White)
                     Text("Régimen contributivo", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.6f))
                 }
-                Box(
-                    Modifier.clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.12f))
-                        .border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(50))
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                ) {
-                    Text("Hola, ${Empresa.AFILIADO.substringBefore(" ")}", style = MaterialTheme.typography.labelMedium, color = Color.White)
+                if (sesion != null) {
+                    Box(
+                        Modifier.clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.12f))
+                            .border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(50))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    ) {
+                        Text(
+                            if (sesion.rol == Rol.Admin) "Administrador" else "Hola, ${sesion.primerNombre}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.White,
+                        )
+                    }
                 }
                 BotonEstilo(onElegirEstilo, tinta = Color.White)
                 BotonTema(onCambiarTema, tinta = Color.White)
@@ -132,14 +153,62 @@ private fun Portada(proxima: Cita?, onVerCitas: () -> Unit, onCambiarTema: () ->
             Spacer(Modifier.height(12.dp))
             Text(Empresa.ESLOGAN, style = MaterialTheme.typography.bodyLarge, color = Color.White.copy(alpha = 0.78f))
             Spacer(Modifier.height(24.dp))
-            if (proxima != null) TarjetaProxima(proxima, onVerCitas)
+            when {
+                sesion == null -> TarjetaPortada(
+                    etiqueta = "TUS CITAS EN UN SOLO LUGAR",
+                    textoBoton = "Iniciar sesión",
+                    iconoBoton = Icons.AutoMirrored.Rounded.Login,
+                    onClick = onAbrir,
+                ) {
+                    Text(
+                        "Ingresa con tu documento para ver, confirmar o cancelar tus citas médicas.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.85f),
+                    )
+                }
+                sesion.rol == Rol.Admin -> TarjetaPortada(
+                    etiqueta = "PANEL DE ADMINISTRACIÓN",
+                    textoBoton = "Abrir panel",
+                    iconoBoton = Icons.Rounded.AdminPanelSettings,
+                    onClick = onAbrir,
+                ) {
+                    Text(
+                        "Agenda citas para los afiliados, agrega profesionales y lleva el control de la red.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.85f),
+                    )
+                }
+                proxima != null -> TarjetaProxima(proxima, onAbrir)
+                else -> TarjetaPortada(
+                    etiqueta = "TUS CITAS",
+                    textoBoton = "Ver mis citas",
+                    iconoBoton = Icons.Rounded.CalendarMonth,
+                    onClick = onAbrir,
+                ) {
+                    Text("No tienes citas próximas.", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.85f))
+                }
+            }
+            if (sesion != null) {
+                TextButton(onClick = onCerrarSesion, modifier = Modifier.align(Alignment.End).padding(top = 6.dp)) {
+                    Icon(Icons.AutoMirrored.Rounded.Logout, contentDescription = null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    val quien = if (sesion.sinConexion) "${sesion.nombre} · sin conexión" else sesion.nombre
+                    Text("Cerrar sesión ($quien)", style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.8f))
+                }
+            }
         }
     }
 }
 
-/** Tarjeta translúcida con la próxima cita y el acceso a la vista Maestro. */
+/** Tarjeta translúcida de la portada, con una etiqueta, un contenido y un botón de acción. */
 @Composable
-private fun TarjetaProxima(cita: Cita, onVerCitas: () -> Unit) {
+private fun TarjetaPortada(
+    etiqueta: String,
+    textoBoton: String,
+    iconoBoton: ImageVector,
+    onClick: () -> Unit,
+    contenido: @Composable () -> Unit,
+) {
     val forma = RoundedCornerShape(26.dp)
     Column(
         Modifier
@@ -149,8 +218,31 @@ private fun TarjetaProxima(cita: Cita, onVerCitas: () -> Unit) {
             .border(1.dp, Color.White.copy(alpha = 0.18f), forma)
             .padding(16.dp),
     ) {
-        Text("TU PRÓXIMA CITA", style = MaterialTheme.typography.labelSmall, color = Vitalis.Acento)
+        Text(etiqueta, style = MaterialTheme.typography.labelSmall, color = Vitalis.Acento)
         Spacer(Modifier.height(10.dp))
+        contenido()
+        Spacer(Modifier.height(16.dp))
+        val interaccion = rememberInteraccion()
+        Button(
+            onClick = onClick,
+            interactionSource = interaccion,
+            modifier = Modifier.fillMaxWidth().height(54.dp).presionable(interaccion),
+            shape = RoundedCornerShape(18.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Vitalis.Acento, contentColor = Vitalis.SobreAcento),
+        ) {
+            Icon(iconoBoton, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Text(textoBoton, style = MaterialTheme.typography.labelLarge)
+            Spacer(Modifier.weight(1f))
+            Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, modifier = Modifier.size(20.dp))
+        }
+    }
+}
+
+/** La próxima cita del afiliado, con el acceso a la vista Maestro. */
+@Composable
+private fun TarjetaProxima(cita: Cita, onVerCitas: () -> Unit) {
+    TarjetaPortada("TU PRÓXIMA CITA", "Ver mis citas", Icons.Rounded.CalendarMonth, onVerCitas) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(
                 Modifier.clip(RoundedCornerShape(16.dp)).background(Color.White).padding(horizontal = 12.dp, vertical = 8.dp),
@@ -165,21 +257,6 @@ private fun TarjetaProxima(cita: Cita, onVerCitas: () -> Unit) {
                 Text("${cita.fecha.diaSemana} · ${cita.hora}", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
                 Text("${cita.profesional} · ${cita.sede}", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.6f))
             }
-        }
-        Spacer(Modifier.height(16.dp))
-        val interaccion = rememberInteraccion()
-        Button(
-            onClick = onVerCitas,
-            interactionSource = interaccion,
-            modifier = Modifier.fillMaxWidth().height(54.dp).presionable(interaccion),
-            shape = RoundedCornerShape(18.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Vitalis.Acento, contentColor = Vitalis.SobreAcento),
-        ) {
-            Icon(Icons.Rounded.CalendarMonth, contentDescription = null, modifier = Modifier.size(20.dp))
-            Spacer(Modifier.width(10.dp))
-            Text("Ver mis citas", style = MaterialTheme.typography.labelLarge)
-            Spacer(Modifier.weight(1f))
-            Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, modifier = Modifier.size(20.dp))
         }
     }
 }

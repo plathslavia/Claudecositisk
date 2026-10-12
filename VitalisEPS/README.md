@@ -10,6 +10,8 @@ Integrantes: Andrés García · Camilo Casallas · Cristóbal Moncada
 | Principal (Main) | `ui/PantallaPrincipal.kt` | Portada de la EPS con la próxima cita, cifras, quiénes somos, misión, visión, servicios y canales de atención |
 | Maestro | `ui/PantallaMaestro.kt` | "Mis citas": resumen por estado, búsqueda, filtros y lista agrupada por mes |
 | Detalle | `ui/PantallaDetalle.kt` | La cita elegida: profesional, fecha y hora, lugar, preparación, autorización; confirmar o cancelar |
+| Inicio de sesión | `ui/PantallaLogin.kt` | Documento y contraseña; cuentas de prueba con un toque |
+| Panel de administración | `ui/PantallaAdmin.kt`, `ui/Formularios.kt` | Todas las citas y los profesionales; crear, confirmar, marcar atendida, cancelar o eliminar |
 
 La navegación está en `App.kt`. En pantallas de 840 dp o más (tablet o escritorio), el Maestro y el Detalle se muestran lado a lado.
 
@@ -25,6 +27,29 @@ Si Android Studio avisa que falta, pulsar "Install missing SDK" o instalarlo en 
 
 Si la sincronización falla con un error de versión de Java, ir a
 *Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK* y elegir **JDK 17** o **21**.
+
+## Iniciar sesión y panel de administración
+
+La portada (vista Principal) es pública. Para ver citas hay que **iniciar sesión**:
+
+| Rol | Usuario | Contraseña | Qué puede hacer |
+|---|---|---|---|
+| Afiliado | `1020456789` (Camilo Casallas) | `camilo123` | Ver **sus** citas, confirmarlas o cancelarlas |
+| Afiliado | `1018223344` (Andrés García) | `andres123` | Igual, con sus propias citas |
+| Afiliado | `1032667788` (Cristóbal Moncada) | `cristobal123` | Igual, con sus propias citas |
+| Administrador | `admin` | `admin123` | Panel de administración: ver todas las citas, crear citas y profesionales, confirmar, marcar como atendida, cancelar o eliminar |
+
+En la pantalla de login hay botones que llenan estas cuentas con un toque.
+Si XAMPP no está encendido, las mismas cuentas funcionan en **modo demostración** con datos de ejemplo
+(los cambios se pierden al cerrar la app).
+
+**Seguridad en el servidor:**
+- Las contraseñas se guardan cifradas con `password_hash` (bcrypt); nunca en texto plano.
+- Al iniciar sesión se crea un token aleatorio que vence en 8 horas; la app lo envía en la cabecera `X-Token`.
+- Cada archivo PHP revisa el rol: un afiliado solo recibe y modifica sus propias citas, y no puede usar
+  las funciones de administración (responde 403).
+- Todas las consultas usan sentencias preparadas (PDO), así que la inyección SQL no funciona.
+- El mismo mensaje para "usuario no existe" y "contraseña incorrecta", para no revelar qué usuarios existen.
 
 ## Conectar con la base de datos (XAMPP)
 
@@ -47,12 +72,25 @@ Si tu MySQL tiene contraseña, cámbiala en `vitalis_api/conexion.php` (`DB_CLAV
 
 | Archivo | Qué hace |
 |---|---|
-| `servidor/vitalis_eps.sql` | Crea las tablas `afiliados`, `especialidades`, `profesionales`, `sedes`, `citas` y `preparaciones` con datos de ejemplo |
-| `vitalis_api/citas.php` | `GET ?afiliado=1` → citas del afiliado con sus pasos de preparación, en JSON |
-| `vitalis_api/cambiar_estado.php` | `POST {"id": 4, "estado": "Confirmada"}` → guarda la confirmación o cancelación |
-| `vitalis_api/conexion.php` | Datos de conexión a MySQL (usuario `root` sin contraseña, como viene XAMPP) |
+| `servidor/vitalis_eps.sql` | Crea las tablas `afiliados`, `especialidades`, `profesionales`, `sedes`, `citas`, `preparaciones`, `usuarios` y `sesiones`, con datos y cuentas de prueba |
+| `vitalis_api/login.php` | `POST {"usuario", "clave"}` → abre la sesión y devuelve el token y el rol |
+| `vitalis_api/logout.php` | `POST` → cierra la sesión |
+| `vitalis_api/citas.php` | `GET` → citas con su preparación (afiliado: las suyas; admin: todas) |
+| `vitalis_api/cambiar_estado.php` | `POST {"id", "estado"}` → confirmar o cancelar (admin: cualquier estado) |
+| `vitalis_api/admin_catalogos.php` | `GET` → afiliados, profesionales y sedes para los formularios (solo admin) |
+| `vitalis_api/admin_crear_cita.php` | `POST` → crea una cita con sus pasos de preparación, validando cada dato (solo admin) |
+| `vitalis_api/admin_crear_profesional.php` | `POST {"nombre", "registro", "especialidad"}` (solo admin) |
+| `vitalis_api/admin_eliminar_cita.php` | `POST {"id"}` (solo admin) |
+| `vitalis_api/conexion.php` | Conexión a MySQL (usuario `root` sin contraseña, como viene XAMPP) y validación de la sesión |
 
-En la app, el cliente está en `data/Servidor.kt` (Ktor) y la lógica de sincronización en `ui/EstadoAgenda.kt`.
+Todas las peticiones, salvo `login.php` e `index.php`, necesitan la cabecera `X-Token` con el token de la sesión.
+
+> **Si ya habías importado la base de datos antes**, vuelve a importar `vitalis_eps.sql` (crea las tablas
+> nuevas de usuarios y sesiones) y vuelve a copiar la carpeta `vitalis_api` completa a `htdocs`.
+
+En la app, el cliente está en `data/Servidor.kt` (Ktor); la sesión, la sincronización y las acciones de
+administración, en `ui/EstadoAgenda.kt`; las pantallas nuevas, en `ui/PantallaLogin.kt`, `ui/PantallaAdmin.kt`
+y `ui/Formularios.kt`.
 
 ## Modo oscuro y estilos
 

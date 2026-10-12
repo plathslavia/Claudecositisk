@@ -2,6 +2,12 @@
 --  Vitalis EPS · Base de datos de citas médicas (MySQL / MariaDB de XAMPP)
 --  Importar en phpMyAdmin: pestaña "Importar" → elegir este archivo → Continuar.
 --  Crea la base vitalis_eps con sus tablas y datos de ejemplo.
+--
+--  Cuentas de prueba (las contraseñas se guardan cifradas con bcrypt, nunca en texto plano):
+--    Administrador:  usuario admin        · contraseña admin123
+--    Afiliados:      usuario 1020456789   · contraseña camilo123     (Camilo Casallas)
+--                    usuario 1018223344   · contraseña andres123     (Andrés García)
+--                    usuario 1032667788   · contraseña cristobal123  (Cristóbal Moncada)
 -- ============================================================================
 
 SET NAMES utf8mb4;
@@ -11,6 +17,8 @@ CREATE DATABASE IF NOT EXISTS vitalis_eps
 USE vitalis_eps;
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS sesiones;
+DROP TABLE IF EXISTS usuarios;
 DROP TABLE IF EXISTS preparaciones;
 DROP TABLE IF EXISTS citas;
 DROP TABLE IF EXISTS profesionales;
@@ -75,12 +83,39 @@ CREATE TABLE preparaciones (
   FOREIGN KEY (id_cita) REFERENCES citas (id_cita) ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
+-- Cuentas para iniciar sesión. Un afiliado ve solo sus citas; un administrador gestiona todo.
+CREATE TABLE usuarios (
+  id_usuario  INT AUTO_INCREMENT PRIMARY KEY,
+  usuario     VARCHAR(40)  NOT NULL UNIQUE,
+  clave_hash  VARCHAR(255) NOT NULL,                 -- password_hash() de PHP (bcrypt)
+  rol         ENUM('afiliado', 'admin') NOT NULL,
+  nombre      VARCHAR(100) NOT NULL,
+  id_afiliado INT NULL,                              -- Solo para el rol afiliado.
+  FOREIGN KEY (id_afiliado) REFERENCES afiliados (id_afiliado)
+) ENGINE = InnoDB;
+
+-- Sesiones abiertas: la app envía el token en la cabecera X-Token.
+CREATE TABLE sesiones (
+  token      CHAR(64) PRIMARY KEY,
+  id_usuario INT NOT NULL,
+  expira     DATETIME NOT NULL,
+  FOREIGN KEY (id_usuario) REFERENCES usuarios (id_usuario) ON DELETE CASCADE
+) ENGINE = InnoDB;
+
 -- ----------------------------------------------------------------------------
 --  Datos de ejemplo (ficticios)
 -- ----------------------------------------------------------------------------
 
 INSERT INTO afiliados (id_afiliado, documento, nombre, tipo) VALUES
-  (1, '1020456789', 'Camilo Casallas', 'Cotizante');
+  (1, '1020456789', 'Camilo Casallas',   'Cotizante'),
+  (2, '1018223344', 'Andrés García',     'Cotizante'),
+  (3, '1032667788', 'Cristóbal Moncada', 'Beneficiario');
+
+INSERT INTO usuarios (usuario, clave_hash, rol, nombre, id_afiliado) VALUES
+  ('admin',      '$2y$10$sELO22eImyp1n4tqAKZuw.ZTt4I.odT1WZ5UTI2ASAdWbrrew28Gm', 'admin',    'Administración Vitalis', NULL),
+  ('1020456789', '$2y$10$5fm48sPzWyOswh.eFRvPb.lAgypaXSCzUZKfscPnp2h.LdQG8GJEu', 'afiliado', 'Camilo Casallas',   1),
+  ('1018223344', '$2y$10$sETb1.3uuVjc4v2TwDnmMeaSz8DMDGDPaaZ3Swhg6MWyO8Mp1IRVW', 'afiliado', 'Andrés García',     2),
+  ('1032667788', '$2y$10$rsJHzW74btkVp./N1Z3Ile5BqXFuJj.KcATyTF6GToR6VKRIWxh9G', 'afiliado', 'Cristóbal Moncada', 3);
 
 INSERT INTO especialidades (id_especialidad, codigo, nombre) VALUES
   (1, 'MedicinaGeneral', 'Medicina general'),
@@ -119,7 +154,10 @@ INSERT INTO citas (id_cita, id_afiliado, id_profesional, id_sede, fecha, hora, d
   (6, 1, 6, 3, '2026-10-13', '09:00:00', 30, 'Presencial',   'Torre A, piso 3 · Av. Cl. 26 # 68C-61',   'PorConfirmar', 'Revisión de fórmula de lentes y control de visión borrosa de lejos.',    'AUT-2026-59711', 5200),
   (7, 1, 7, 2, '2026-09-22', '11:20:00', 20, 'Presencial',   'Consultorio 31 · Cra. 7 # 119-14',        'Atendida',     'Control de dermatitis en manos.',                                        'AUT-2026-57102', 5200),
   (8, 1, 8, 1, '2026-09-10', '17:00:00', 45, 'Presencial',   'Gimnasio terapéutico · Cl. 63 # 13-22',   'Atendida',     'Terapia física para dolor lumbar (sesión 4 de 10).',                     'AUT-2026-56390', 5200),
-  (9, 1, 9, 3, '2026-09-07', '08:40:00', 20, 'Presencial',   'Torre A, piso 2 · Av. Cl. 26 # 68C-61',   'Cancelada',    'Control de crecimiento y desarrollo.',                                   'AUT-2026-55811', 0);
+  (9, 1, 9, 3, '2026-09-07', '08:40:00', 20, 'Presencial',   'Torre A, piso 2 · Av. Cl. 26 # 68C-61',   'Cancelada',    'Control de crecimiento y desarrollo.',                                   'AUT-2026-55811', 0),
+  (10, 2, 1, 2, '2026-10-03', '08:00:00', 20, 'Presencial',  'Consultorio 15 · Cra. 7 # 119-14',        'Confirmada',   'Revisión de presión arterial.',                                          'AUT-2026-60110', 5200),
+  (11, 2, 4, 3, '2026-10-09', '15:00:00', 30, 'Presencial',  'Torre B, piso 5 · Av. Cl. 26 # 68C-61',   'PorConfirmar', 'Control con electrocardiograma.',                                        'AUT-2026-60255', 5200),
+  (12, 3, 3, 4, '2026-10-06', '18:00:00', 50, 'Telemedicina', 'El enlace se activa 10 minutos antes',   'PorConfirmar', 'Primera consulta de orientación.',                                       'AUT-2026-60301', 5200);
 
 INSERT INTO preparaciones (id_cita, orden, texto) VALUES
   (1, 1, 'Llega 15 minutos antes para el registro'),
@@ -140,4 +178,7 @@ INSERT INTO preparaciones (id_cita, orden, texto) VALUES
   (6, 2, 'Ve acompañado: pueden dilatarte las pupilas'),
   (7, 1, 'Trae los medicamentos que estás usando'),
   (8, 1, 'Usa ropa deportiva'),
-  (9, 1, 'Trae el carné de vacunación');
+  (9, 1, 'Trae el carné de vacunación'),
+  (10, 1, 'No fumes ni tomes café 30 minutos antes'),
+  (11, 1, 'Trae los exámenes anteriores'),
+  (12, 1, 'Busca un lugar tranquilo y con buena señal');

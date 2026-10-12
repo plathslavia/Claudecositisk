@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.EventBusy
 import androidx.compose.material.icons.rounded.LocationOn
@@ -52,7 +53,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.vitalis.eps.data.Cita
-import com.vitalis.eps.data.Empresa
 import com.vitalis.eps.data.Estado
 import com.vitalis.eps.data.Modalidad
 import com.vitalis.eps.theme.Vitalis
@@ -72,6 +72,7 @@ fun PantallaMaestro(
     onVolver: () -> Unit,
     onSeleccionar: (Cita) -> Unit,
     onCambiarTema: () -> Unit,
+    onCerrarSesion: () -> Unit,
     onReintentar: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -93,6 +94,9 @@ fun PantallaMaestro(
                         }
                         Spacer(Modifier.weight(1f))
                         BotonTema(onCambiarTema)
+                        IconButton(onClick = onCerrarSesion) {
+                            Icon(Icons.AutoMirrored.Rounded.Logout, contentDescription = "Cerrar sesión")
+                        }
                         Spacer(Modifier.width(4.dp))
                         LogoVitalis(Modifier.size(32.dp), fondo = if (esOscuro) Vitalis.Base2 else Vitalis.Base)
                         Spacer(Modifier.width(8.dp))
@@ -100,7 +104,7 @@ fun PantallaMaestro(
                     Column(Modifier.padding(start = 8.dp, top = 4.dp, end = 8.dp)) {
                         Text("Mis citas", style = MaterialTheme.typography.displaySmall)
                         Text(
-                            "${Empresa.AFILIADO} · Afiliado cotizante",
+                            "${estado.sesion?.nombre.orEmpty()} · Afiliado",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -210,7 +214,7 @@ private fun Filtros(estado: EstadoAgenda, modifier: Modifier) {
 
 /** Píldora que dice de dónde vienen los datos; al tocarla se abre la configuración del servidor. */
 @Composable
-private fun EstadoConexion(origen: Origen, onClick: () -> Unit) {
+internal fun EstadoConexion(origen: Origen, onClick: () -> Unit) {
     val (texto, color) = when (origen) {
         Origen.Servidor -> "Conectado a la base de datos (XAMPP)" to Vitalis.Acento
         Origen.Conectando -> "Conectando con el servidor…" to Vitalis.Aviso

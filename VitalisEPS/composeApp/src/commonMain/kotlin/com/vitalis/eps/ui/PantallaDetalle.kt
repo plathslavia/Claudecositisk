@@ -38,6 +38,7 @@ import androidx.compose.material.icons.rounded.EventAvailable
 import androidx.compose.material.icons.rounded.EventBusy
 import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.Payments
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Receipt
 import androidx.compose.material.icons.rounded.TaskAlt
 import androidx.compose.material.icons.rounded.Videocam
@@ -269,6 +270,7 @@ private fun ListaPreparacion(cita: Cita) {
 @Composable
 private fun Autorizacion(cita: Cita) {
     val filas = listOf(
+        Triple(Icons.Rounded.Person, "Paciente", cita.paciente),
         Triple(Icons.Rounded.Receipt, "Número de autorización", cita.autorizacion),
         Triple(Icons.Rounded.Payments, "Cuota moderadora", pesos(cita.cuotaModeradora)),
         Triple(Icons.Rounded.Badge, "Registro del profesional", cita.registro),

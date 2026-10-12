@@ -59,14 +59,20 @@ import com.vitalis.eps.theme.esOscuro
 
 /** Vista Principal (Main): pantalla de entrada con la información de la EPS. */
 @Composable
-fun PantallaPrincipal(proxima: Cita?, onVerCitas: () -> Unit, onCambiarTema: () -> Unit, modifier: Modifier = Modifier) {
+fun PantallaPrincipal(
+    proxima: Cita?,
+    onVerCitas: () -> Unit,
+    onCambiarTema: () -> Unit,
+    onElegirEstilo: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState()),
     ) {
-        Portada(proxima, onVerCitas, onCambiarTema)
+        Portada(proxima, onVerCitas, onCambiarTema, onElegirEstilo)
         Column(
             Modifier.padding(horizontal = 20.dp).padding(top = 24.dp),
             verticalArrangement = Arrangement.spacedBy(28.dp),
@@ -88,12 +94,12 @@ fun PantallaPrincipal(proxima: Cita?, onVerCitas: () -> Unit, onCambiarTema: () 
 }
 
 @Composable
-private fun Portada(proxima: Cita?, onVerCitas: () -> Unit, onCambiarTema: () -> Unit) {
+private fun Portada(proxima: Cita?, onVerCitas: () -> Unit, onCambiarTema: () -> Unit, onElegirEstilo: () -> Unit) {
     Box(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp))
-            .fondoMalla(),
+            .fondoMalla(Vitalis),
     ) {
         LineaPulso(Modifier.padding(top = 96.dp).fillMaxWidth().height(110.dp))
         Column(Modifier.statusBarsPadding().padding(horizontal = 22.dp).padding(top = 20.dp, bottom = 26.dp)) {
@@ -111,13 +117,14 @@ private fun Portada(proxima: Cita?, onVerCitas: () -> Unit, onCambiarTema: () ->
                 ) {
                     Text("Hola, ${Empresa.AFILIADO.substringBefore(" ")}", style = MaterialTheme.typography.labelMedium, color = Color.White)
                 }
+                BotonEstilo(onElegirEstilo, tinta = Color.White)
                 BotonTema(onCambiarTema, tinta = Color.White)
             }
             Spacer(Modifier.height(56.dp))
             Text(
                 buildAnnotatedString {
                     append("Tu salud,\n")
-                    withStyle(SpanStyle(color = Vitalis.Teal)) { append("a tiempo.") }
+                    withStyle(SpanStyle(color = Vitalis.Acento)) { append("a tiempo.") }
                 },
                 style = MaterialTheme.typography.displayMedium,
                 color = Color.White,
@@ -142,15 +149,15 @@ private fun TarjetaProxima(cita: Cita, onVerCitas: () -> Unit) {
             .border(1.dp, Color.White.copy(alpha = 0.18f), forma)
             .padding(16.dp),
     ) {
-        Text("TU PRÓXIMA CITA", style = MaterialTheme.typography.labelSmall, color = Vitalis.Teal)
+        Text("TU PRÓXIMA CITA", style = MaterialTheme.typography.labelSmall, color = Vitalis.Acento)
         Spacer(Modifier.height(10.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(
                 Modifier.clip(RoundedCornerShape(16.dp)).background(Color.White).padding(horizontal = 12.dp, vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(cita.fecha.mesCorto.uppercase(), style = MaterialTheme.typography.labelSmall, color = Vitalis.Coral)
-                Text("${cita.fecha.dia}", style = MaterialTheme.typography.headlineMedium, color = Vitalis.Noche)
+                Text(cita.fecha.mesCorto.uppercase(), style = MaterialTheme.typography.labelSmall, color = Vitalis.Peligro)
+                Text("${cita.fecha.dia}", style = MaterialTheme.typography.headlineMedium, color = Vitalis.Base)
             }
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
@@ -166,7 +173,7 @@ private fun TarjetaProxima(cita: Cita, onVerCitas: () -> Unit) {
             interactionSource = interaccion,
             modifier = Modifier.fillMaxWidth().height(54.dp).presionable(interaccion),
             shape = RoundedCornerShape(18.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Vitalis.Teal, contentColor = Vitalis.Noche),
+            colors = ButtonDefaults.buttonColors(containerColor = Vitalis.Acento, contentColor = Vitalis.SobreAcento),
         ) {
             Icon(Icons.Rounded.CalendarMonth, contentDescription = null, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(10.dp))
@@ -187,7 +194,7 @@ private fun Seccion(titulo: String, contenido: @Composable () -> Unit) {
 
 @Composable
 private fun Cifras() {
-    val acentos = if (esOscuro) listOf(Vitalis.Teal, Color(0xFFA99DFF), Color(0xFF8FB4FF)) else listOf(Vitalis.TealOscuro, Vitalis.Violeta, Vitalis.Indigo)
+    val acentos = if (esOscuro) listOf(Vitalis.Acento, Color(0xFFA99DFF), Color(0xFF8FB4FF)) else listOf(Vitalis.AcentoOscuro, Vitalis.Acento2, Vitalis.Base2)
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Empresa.cifras.forEachIndexed { i, cifra ->
             Column(
@@ -208,18 +215,18 @@ private fun Cifras() {
 @Composable
 private fun TarjetaProposito(icono: ImageVector, titulo: String, texto: String, oscura: Boolean, modifier: Modifier) {
     val fondo = when {
-        oscura && esOscuro -> Vitalis.Indigo
-        oscura -> Vitalis.Noche
+        oscura && esOscuro -> Vitalis.Base2
+        oscura -> Vitalis.Base
         esOscuro -> MaterialTheme.colorScheme.tertiaryContainer
-        else -> Vitalis.VioletaClaro
+        else -> Vitalis.Acento2Claro
     }
     val tinta = if (oscura || esOscuro) Color.White else Vitalis.Tinta
     Column(modifier.clip(MaterialTheme.shapes.large).background(fondo).padding(16.dp)) {
         Box(
-            Modifier.size(36.dp).clip(CircleShape).background(if (oscura) Vitalis.Teal else Vitalis.Violeta),
+            Modifier.size(36.dp).clip(CircleShape).background(if (oscura) Vitalis.Acento else Vitalis.Acento2),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(icono, contentDescription = null, tint = if (oscura) Vitalis.Noche else Color.White, modifier = Modifier.size(19.dp))
+            Icon(icono, contentDescription = null, tint = if (oscura) Vitalis.Base else Color.White, modifier = Modifier.size(19.dp))
         }
         Spacer(Modifier.height(12.dp))
         Text(titulo, style = MaterialTheme.typography.titleLarge, color = tinta)
@@ -236,10 +243,10 @@ private fun Servicios() {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 fila.forEach { servicio ->
                     val (icono, color) = when (servicio.tipo) {
-                        TipoServicio.Consulta -> Icons.Rounded.MedicalServices to Vitalis.TealOscuro
-                        TipoServicio.Telemedicina -> Icons.Rounded.Videocam to Vitalis.Violeta
-                        TipoServicio.Laboratorio -> Icons.Rounded.Science to Vitalis.Ambar
-                        TipoServicio.Prevencion -> Icons.Rounded.HealthAndSafety to Vitalis.Coral
+                        TipoServicio.Consulta -> Icons.Rounded.MedicalServices to Vitalis.AcentoOscuro
+                        TipoServicio.Telemedicina -> Icons.Rounded.Videocam to Vitalis.Acento2
+                        TipoServicio.Laboratorio -> Icons.Rounded.Science to Vitalis.Aviso
+                        TipoServicio.Prevencion -> Icons.Rounded.HealthAndSafety to Vitalis.Peligro
                     }
                     Column(
                         Modifier
@@ -269,7 +276,7 @@ private fun Servicios() {
 @Composable
 private fun Canales() {
     Column(
-        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).fondoMalla().padding(20.dp),
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).fondoMalla(Vitalis).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Empresa.canales.forEach { dato ->
@@ -284,7 +291,7 @@ private fun Canales() {
                     Modifier.size(34.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.12f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(icono, contentDescription = null, tint = Vitalis.Teal, modifier = Modifier.size(18.dp))
+                    Icon(icono, contentDescription = null, tint = Vitalis.Acento, modifier = Modifier.size(18.dp))
                 }
                 Spacer(Modifier.width(14.dp))
                 Text(dato.valor, style = MaterialTheme.typography.bodyMedium, color = Color.White)

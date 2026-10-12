@@ -1,6 +1,7 @@
 package com.vitalis.eps.ui
 
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,17 +45,29 @@ class EstadoAgenda {
     private var base by mutableStateOf(Agenda.citas)
     private val cambios = mutableStateMapOf<String, Estado>()
 
-    val citas: List<Cita> get() = base.map { c -> cambios[c.id]?.let { c.copy(estado = it) } ?: c }
+    // Un solo cliente HTTP por dirección: crear uno por petición desperdicia hilos y conexiones.
+    private var cliente: ClienteApi? = null
+    private var urlCliente = ""
+    private fun api(): ClienteApi {
+        val actual = cliente
+        if (actual != null && urlCliente == urlServidor) return actual
+        actual?.close()
+        return ClienteApi(urlServidor).also { cliente = it; urlCliente = urlServidor }
+    }
+
+    // derivedStateOf: la lista, la próxima cita y los resultados se recalculan solo cuando cambian
+    // sus datos, no en cada recomposición.
+    val citas: List<Cita> by derivedStateOf { base.map { c -> cambios[c.id]?.let { c.copy(estado = it) } ?: c } }
 
     fun cita(id: String): Cita? = citas.firstOrNull { it.id == id }
 
-    val proxima: Cita? get() = citas.filter { it.estado.esProxima }.minByOrNull { it.fecha.orden }
+    val proxima: Cita? by derivedStateOf { citas.filter { it.estado.esProxima }.minByOrNull { it.fecha.orden } }
 
     /** Carga las citas desde la API de XAMPP; si no responde, deja las de ejemplo. */
     suspend fun sincronizar() {
         origen = Origen.Conectando
         try {
-            val delServidor = ClienteApi(urlServidor).use { it.citas(Empresa.ID_AFILIADO) }
+            val delServidor = api().citas(Empresa.ID_AFILIADO)
             base = delServidor
             cambios.clear()
             origen = Origen.Servidor
@@ -76,7 +89,7 @@ class EstadoAgenda {
         if (origen != Origen.Servidor) return
         alcance.launch {
             try {
-                ClienteApi(urlServidor).use { it.cambiarEstado(id, estado) }
+                api().cambiarEstado(id, estado)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -86,10 +99,9 @@ class EstadoAgenda {
         }
     }
 
-    val resultados: List<Cita>
-        get() {
+    val resultados: List<Cita> by derivedStateOf {
             val texto = busqueda.trim()
-            return citas
+            citas
                 .filter { c ->
                     when (filtro) {
                         Filtro.Proximas -> c.estado.esProxima
@@ -103,5 +115,5 @@ class EstadoAgenda {
                         .any { it.contains(texto, ignoreCase = true) }
                 }
                 .sortedWith(compareBy<Cita> { !it.estado.esProxima }.thenBy { if (it.estado.esProxima) it.fecha.orden else -it.fecha.orden })
-        }
+    }
 }

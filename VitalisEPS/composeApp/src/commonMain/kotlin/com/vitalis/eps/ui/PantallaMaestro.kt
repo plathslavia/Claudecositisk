@@ -94,7 +94,7 @@ fun PantallaMaestro(
                         Spacer(Modifier.weight(1f))
                         BotonTema(onCambiarTema)
                         Spacer(Modifier.width(4.dp))
-                        LogoVitalis(Modifier.size(32.dp), fondo = if (esOscuro) Vitalis.Indigo else Vitalis.Noche)
+                        LogoVitalis(Modifier.size(32.dp), fondo = if (esOscuro) Vitalis.Base2 else Vitalis.Base)
                         Spacer(Modifier.width(8.dp))
                     }
                     Column(Modifier.padding(start = 8.dp, top = 4.dp, end = 8.dp)) {
@@ -133,7 +133,7 @@ fun PantallaMaestro(
                         unfocusedContainerColor = colorTarjeta,
                         focusedContainerColor = colorTarjeta,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                        focusedBorderColor = Vitalis.Teal,
+                        focusedBorderColor = Vitalis.Acento,
                     ),
                 )
             }
@@ -212,9 +212,9 @@ private fun Filtros(estado: EstadoAgenda, modifier: Modifier) {
 @Composable
 private fun EstadoConexion(origen: Origen, onClick: () -> Unit) {
     val (texto, color) = when (origen) {
-        Origen.Servidor -> "Conectado a la base de datos (XAMPP)" to Vitalis.Teal
-        Origen.Conectando -> "Conectando con el servidor…" to Vitalis.Ambar
-        Origen.Ejemplo -> "Sin servidor · datos de ejemplo" to Vitalis.Ambar
+        Origen.Servidor -> "Conectado a la base de datos (XAMPP)" to Vitalis.Acento
+        Origen.Conectando -> "Conectando con el servidor…" to Vitalis.Aviso
+        Origen.Ejemplo -> "Sin servidor · datos de ejemplo" to Vitalis.Aviso
     }
     Row(
         Modifier
@@ -259,7 +259,7 @@ private fun Resumen(citas: List<Cita>, modifier: Modifier) {
 private fun FilaCita(cita: Cita, seleccionada: Boolean, onClick: () -> Unit, modifier: Modifier) {
     val interaccion = rememberInteraccion()
     val borde by animateColorAsState(
-        if (seleccionada) Vitalis.Teal else MaterialTheme.colorScheme.outlineVariant,
+        if (seleccionada) Vitalis.Acento else MaterialTheme.colorScheme.outlineVariant,
         animationSpec = resorte(),
         label = "borde",
     )

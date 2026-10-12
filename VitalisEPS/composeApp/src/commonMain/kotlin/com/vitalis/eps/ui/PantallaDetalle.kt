@@ -118,7 +118,7 @@ private fun Encabezado(cita: Cita, onVolver: (() -> Unit)?, compacto: Boolean) {
                 .fillMaxWidth()
                 .height(if (compacto) 208.dp else 318.dp)
                 .clip(RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp))
-                .background(Brush.linearGradient(listOf(color, Vitalis.Indigo, Vitalis.Noche))),
+                .background(Brush.linearGradient(listOf(color, Vitalis.Base2, Vitalis.Base))),
         ) {
             LineaPulso(
                 Modifier.padding(top = if (compacto) 30.dp else 70.dp).fillMaxWidth().height(90.dp),
@@ -144,7 +144,7 @@ private fun Encabezado(cita: Cita, onVolver: (() -> Unit)?, compacto: Boolean) {
                 Text(
                     if (cita.modalidad == Modalidad.Telemedicina) "CITA POR VIDEOLLAMADA" else "CITA PRESENCIAL",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Vitalis.Teal,
+                    color = Vitalis.Acento,
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
@@ -173,7 +173,7 @@ private fun Tiquete(cita: Cita, modifier: Modifier) {
     Row(
         modifier
             .fillMaxWidth()
-            .shadow(18.dp, RoundedCornerShape(24.dp), ambientColor = Vitalis.Noche.copy(alpha = 0.25f), spotColor = Vitalis.Noche.copy(alpha = 0.25f))
+            .shadow(18.dp, RoundedCornerShape(24.dp), ambientColor = Vitalis.Base.copy(alpha = 0.25f), spotColor = Vitalis.Base.copy(alpha = 0.25f))
             .clip(RoundedCornerShape(24.dp))
             .background(colorTarjeta)
             .height(IntrinsicSize.Min)
@@ -204,13 +204,13 @@ private fun Lugar(cita: Cita) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(46.dp).clip(RoundedCornerShape(14.dp)).background((if (virtual) Vitalis.Violeta else Vitalis.Teal).copy(alpha = if (esOscuro) 0.2f else 0.14f)),
+            Modifier.size(46.dp).clip(RoundedCornerShape(14.dp)).background((if (virtual) Vitalis.Acento2 else Vitalis.Acento).copy(alpha = if (esOscuro) 0.2f else 0.14f)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 if (virtual) Icons.Rounded.Videocam else Icons.Rounded.LocationOn,
                 contentDescription = null,
-                tint = if (virtual) Vitalis.Violeta else if (esOscuro) Vitalis.Teal else Vitalis.TealOscuro,
+                tint = if (virtual) Vitalis.Acento2 else if (esOscuro) Vitalis.Acento else Vitalis.AcentoOscuro,
                 modifier = Modifier.size(24.dp),
             )
         }
@@ -243,8 +243,8 @@ private fun ListaPreparacion(cita: Cita) {
     ) {
         cita.preparacion.forEachIndexed { i, paso ->
             val listo = hechos[i]
-            val fondo by animateColorAsState(if (listo) Vitalis.Teal else Color.Transparent, resorte(), label = "check")
-            val borde by animateColorAsState(if (listo) Vitalis.Teal else MaterialTheme.colorScheme.outline, resorte(), label = "borde")
+            val fondo by animateColorAsState(if (listo) Vitalis.Acento else Color.Transparent, resorte(), label = "check")
+            val borde by animateColorAsState(if (listo) Vitalis.Acento else MaterialTheme.colorScheme.outline, resorte(), label = "borde")
             Row(
                 Modifier.fillMaxWidth().clickable { hechos[i] = !listo }.padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -253,7 +253,7 @@ private fun ListaPreparacion(cita: Cita) {
                     Modifier.size(24.dp).clip(CircleShape).background(fondo).border(2.dp, borde, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (listo) Icon(Icons.Rounded.Check, contentDescription = null, tint = Vitalis.Noche, modifier = Modifier.size(16.dp))
+                    if (listo) Icon(Icons.Rounded.Check, contentDescription = null, tint = Vitalis.SobreAcento, modifier = Modifier.size(16.dp))
                 }
                 Spacer(Modifier.width(14.dp))
                 Text(
@@ -323,7 +323,7 @@ private fun BarraAcciones(cita: Cita, onCambiarEstado: (Estado) -> Unit, modifie
                             onClick = { onCambiarEstado(Estado.Cancelada) },
                             modifier = Modifier.height(54.dp),
                             shape = RoundedCornerShape(18.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Vitalis.Coral),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Vitalis.Peligro),
                         ) { Text("Cancelar", style = MaterialTheme.typography.labelLarge) }
                         val interaccion = rememberInteraccion()
                         Button(
@@ -331,7 +331,7 @@ private fun BarraAcciones(cita: Cita, onCambiarEstado: (Estado) -> Unit, modifie
                             interactionSource = interaccion,
                             modifier = Modifier.weight(1f).height(54.dp).presionable(interaccion),
                             shape = RoundedCornerShape(18.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Vitalis.Teal, contentColor = Vitalis.Noche),
+                            colors = ButtonDefaults.buttonColors(containerColor = Vitalis.Acento, contentColor = Vitalis.SobreAcento),
                         ) {
                             Icon(Icons.Rounded.EventAvailable, contentDescription = null, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(8.dp))
@@ -344,7 +344,7 @@ private fun BarraAcciones(cita: Cita, onCambiarEstado: (Estado) -> Unit, modifie
                             onClick = { onCambiarEstado(Estado.Cancelada) },
                             modifier = Modifier.height(50.dp),
                             shape = RoundedCornerShape(18.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Vitalis.Coral),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Vitalis.Peligro),
                         ) { Text("Cancelar cita", style = MaterialTheme.typography.labelLarge) }
                     }
                     Estado.Atendida -> Aviso(
@@ -353,7 +353,7 @@ private fun BarraAcciones(cita: Cita, onCambiarEstado: (Estado) -> Unit, modifie
                     )
                     Estado.Cancelada -> Aviso(
                         Icons.Rounded.EventBusy, "Cita cancelada", "Puedes pedir una nueva por la línea 24/7 o por WhatsApp.",
-                        Vitalis.Coral, Modifier.weight(1f),
+                        Vitalis.Peligro, Modifier.weight(1f),
                     )
                 }
             }

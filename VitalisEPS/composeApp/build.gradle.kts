@@ -73,6 +73,9 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            // Firma la versión release con la llave de depuración para poder instalarla desde
+            // Android Studio (Build Variants → release) sin crear un keystore. Solo para pruebas.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {

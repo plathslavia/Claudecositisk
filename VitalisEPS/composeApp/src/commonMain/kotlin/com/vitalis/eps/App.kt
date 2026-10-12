@@ -43,7 +43,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.vitalis.eps.data.Estado
+import com.vitalis.eps.theme.Estilo
 import com.vitalis.eps.theme.VitalisTheme
+import com.vitalis.eps.ui.DialogoEstilos
 import com.vitalis.eps.ui.EstadoAgenda
 import com.vitalis.eps.ui.PantallaDetalle
 import com.vitalis.eps.ui.PantallaMaestro
@@ -72,11 +74,17 @@ private fun destinoDesde(texto: String): Destino = when {
 private val ANCHO_DOS_PANELES = 840.dp
 
 @Composable
-fun App(inicio: List<Destino> = listOf(Destino.Principal), oscuroInicial: Boolean? = null) {
+fun App(
+    inicio: List<Destino> = listOf(Destino.Principal),
+    oscuroInicial: Boolean? = null,
+    estiloInicial: Estilo = Estilo.Pulso,
+) {
     // Nulo = seguir el tema del sistema; el botón sol/luna lo fija en claro u oscuro.
     var oscuroElegido by rememberSaveable { mutableStateOf(oscuroInicial) }
     val oscuro = oscuroElegido ?: isSystemInDarkTheme()
-    VitalisTheme(oscuro) {
+    var estilo by rememberSaveable { mutableStateOf(estiloInicial) }
+    var eligiendoEstilo by remember { mutableStateOf(false) }
+    VitalisTheme(oscuro, estilo) {
         // Pila de navegación guardada como texto para que sobreviva a la rotación de pantalla.
         var pilaTexto by rememberSaveable { mutableStateOf(inicio.joinToString("|") { it.aTexto() }) }
         val pila = pilaTexto.split("|").map(::destinoDesde)
@@ -88,6 +96,10 @@ fun App(inicio: List<Destino> = listOf(Destino.Principal), oscuroInicial: Boolea
         LaunchedEffect(agenda.urlServidor, intento) { agenda.sincronizar() }
 
         val cambiarTema = { oscuroElegido = !oscuro }
+        val elegirEstilo = { eligiendoEstilo = true }
+        if (eligiendoEstilo) {
+            DialogoEstilos(actual = estilo, onElegir = { estilo = it }, onCerrar = { eligiendoEstilo = false })
+        }
         val reintentar: (String) -> Unit = { url ->
             agenda.urlServidor = url
             intento++
@@ -123,6 +135,7 @@ fun App(inicio: List<Destino> = listOf(Destino.Principal), oscuroInicial: Boolea
                         pilaTexto = (base + Destino.Detalle(id)).joinToString("|") { it.aTexto() }
                     },
                     onCambiarTema = cambiarTema,
+                    onElegirEstilo = elegirEstilo,
                     onReintentar = reintentar,
                     onCambiarEstado = cambiarEstado,
                 )
@@ -134,7 +147,7 @@ fun App(inicio: List<Destino> = listOf(Destino.Principal), oscuroInicial: Boolea
                     label = "navegacion",
                 ) { estado ->
                     when (val destino = estado.last()) {
-                        Destino.Principal -> PantallaPrincipal(agenda.proxima, onVerCitas = { ir(Destino.Maestro) }, onCambiarTema = cambiarTema)
+                        Destino.Principal -> PantallaPrincipal(agenda.proxima, onVerCitas = { ir(Destino.Maestro) }, onCambiarTema = cambiarTema, onElegirEstilo = elegirEstilo)
                         Destino.Maestro -> PantallaMaestro(
                             estado = agenda,
                             seleccionadaId = null,
@@ -179,12 +192,13 @@ private fun PantallaAncha(
     alInicio: () -> Unit,
     onCambiarDetalle: (String) -> Unit,
     onCambiarTema: () -> Unit,
+    onElegirEstilo: () -> Unit,
     onReintentar: (String) -> Unit,
     onCambiarEstado: (String, Estado) -> Unit,
 ) {
     val actual = pila.last()
     if (actual is Destino.Principal) {
-        PantallaPrincipal(agenda.proxima, onVerCitas = { ir(Destino.Maestro) }, onCambiarTema = onCambiarTema)
+        PantallaPrincipal(agenda.proxima, onVerCitas = { ir(Destino.Maestro) }, onCambiarTema = onCambiarTema, onElegirEstilo = onElegirEstilo)
         return
     }
     val seleccionado = (actual as? Destino.Detalle)?.citaId

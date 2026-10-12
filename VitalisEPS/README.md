@@ -54,9 +54,24 @@ Si tu MySQL tiene contraseña, cámbiala en `vitalis_api/conexion.php` (`DB_CLAV
 
 En la app, el cliente está en `data/Servidor.kt` (Ktor) y la lógica de sincronización en `ui/EstadoAgenda.kt`.
 
-## Modo oscuro
+## Modo oscuro y estilos
 
-Sigue el tema del celular. El botón sol/luna (en la portada y en *Mis citas*) lo cambia manualmente.
+El modo oscuro sigue el tema del celular; el botón sol/luna (en la portada y en *Mis citas*) lo cambia a mano.
+El botón de paleta de la portada abre el selector de estilo: **Pulso**, **Calma**, **Coral** y **Neón**
+(colores y tipografía en `theme/Estilos.kt`).
+
+## Si la app se siente lenta
+
+1. **Prueba la versión release, no la debug.** Android Studio instala por defecto la versión *debug*, que
+   puede ser varias veces más lenta en Compose: es depurable y no usa los perfiles de optimización de
+   las librerías. Para probar la rápida: *View → Tool Windows → Build Variants* → en `composeApp`
+   elige **release** → Run ▶. Ya viene firmada con la llave de depuración, así que instala sin más pasos.
+2. **Emulador:** que use aceleración por hardware (en *Device Manager* → editar → *Graphics: Hardware*).
+   Un celular real siempre da una idea más fiel.
+3. **Para ver qué se recompone de más:** *Tools → Layout Inspector* → activa *Show Recomposition Counts*.
+   Si un número sube sin que toques nada, ese componente está trabajando de más.
+4. **Para medir cuadros lentos:** en el celular, *Opciones de desarrollador → Renderización de GPU del
+   perfil → En pantalla como barras*. Las barras que pasan la línea verde tardaron más de 16 ms.
 
 ## Ejecutar en escritorio
 
